@@ -129,19 +129,19 @@ $ python -m unittest discover tests
 If you use Balans in a publication, please cite it as:
 
 ```bibtex
-    @inproceedings{balans25,
-      author       = {Junyang Cai and
-                      Serdar Kadioglu and
-                      Bistra Dilkina},
-      title        = {BALANS: Multi-Armed Bandits-based Adaptive Large Neighborhood Search for Mixed-Integer Programming Problems},
-      booktitle    = {Proceedings of the Thirty-Fourth International Joint Conference on
-                      Artificial Intelligence, {IJCAI} 2025, Montreal, Canada, August 16-22,
-                      2025},
-      pages        = {xx--xx},
-      publisher    = {ijcai.org},
-      year         = {2025},
-      url          = {https://www.ijcai.org/proceedings/2025/xx},
-    }
+  @inproceedings{ijcai2025p286,
+    title     = {Balans: Multi-Armed Bandits-based Adaptive Large Neighborhood Search for Mixed-Integer Programming Problems},
+    author    = {Cai, Junyang and Kadioğlu, Serdar and Dilkina, Bistra},
+    booktitle = {Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence, {IJCAI-25}},
+    publisher = {International Joint Conferences on Artificial Intelligence Organization},
+    editor    = {James Kwok},
+    pages     = {2566--2574},
+    year      = {2025},
+    month     = {8},
+    note      = {Main Track},
+    doi       = {10.24963/ijcai.2025/286},
+    url       = {https://doi.org/10.24963/ijcai.2025/286},
+  }
 ```
 
 ## License
