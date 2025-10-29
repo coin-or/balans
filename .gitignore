@@ -3,7 +3,7 @@
 .idea/*
 .pytest_cache/*
 tests/__pycache__/*
-PRTCJP-584/__pycache__/*
+tests/results/*
 
 # Environments
 .env
