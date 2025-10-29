@@ -9,9 +9,9 @@ The framework integrates several powerful components into a highly configurable,
 * [ALNS](https://github.com/N-Wouda/ALNS/) for adaptive large neighborhood search
 * [SCIP](https://scipopt.org/) and [Gurobi](https://www.gurobi.com/) for solving mixed-integer linear programming problems. 
 
-**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level and the inner branch-and-bound level to exploit modern multi-core architectures. 
+**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level and the inner branch-and-bound level to exploit modern multicore architectures. 
 
-More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP).
+More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP). A detailed description of the framework, algorithms, and experimental results can be found in our [IJCAI'25 presentation](https://nbviewer.org/github/skadio/skadio.github.io/blob/master/files/2025_IJCAI_Balans_Kadioglu.pdf).
 
 Balans is developed collaboratively by the AI Center of Excellence at Fidelity Investments and the University of Southern California.
 
