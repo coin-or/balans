@@ -1,3 +1,6 @@
+[![ci](https://github.com/skadio/balans/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/skadio/balans/actions/workflows/ci.yml) [![PyPI version fury.io](https://badge.fury.io/py/balans.svg)](https://pypi.python.org/pypi/balans/) [![PyPI license](https://img.shields.io/pypi/l/balans.svg)](https://pypi.python.org/pypi/balans/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![Downloads](https://static.pepy.tech/personalized-badge/balans?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/balans)
+
+
 # Balans: Bandit-based Adaptive Large Neighborhood Search
 **Balans** ([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
 
