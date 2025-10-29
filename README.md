@@ -1,17 +1,16 @@
 # Balans: Bandit-based Adaptive Large Neighborhood Search
-Balans ([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through  
-multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
+**Balans** ([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
 
-Balans combines several powerful components into a highly configurable, MIP solver agnostic, modular and extendable, open-source software: 
+The framework integrates several powerful components into a highly configurable, modular, extensible, solver-agnostic, open-source software: 
 * [MABWiser](https://github.com/fidelity/mabwiser/) for contextual multi-armed bandits
 * [ALNS](https://github.com/N-Wouda/ALNS/) for adaptive large neighborhood search
 * [SCIP](https://scipopt.org/) and [Gurobi](https://www.gurobi.com/) for solving mixed-integer linear programming problems. 
 
-ParBalans ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies both at the outer configuration level and the inner branch-and-bound level to accelerate search and exploit modern hardware architectures with multiple cores. 
+**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level and the inner branch-and-bound level to exploit modern multi-core architectures. 
 
 More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP).
 
-Balans is developed by the AI Center of Excellence at Fidelity Investments, University of Southern California, and Northeastern University. 
+Balans is developed collaboratively by the AI Center of Excellence at Fidelity Investments, the University of Southern California.
 
 ## Quick Start
 ```python
