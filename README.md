@@ -1,5 +1,5 @@
 # Balans: Bandit-based Adaptive Large Neighborhood Search
-Balans([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through  
+Balans ([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through  
 multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
 
 Balans combines several powerful components into a highly configurable, MIP solver agnostic, modular and extendable, open-source software: 
@@ -7,7 +7,7 @@ Balans combines several powerful components into a highly configurable, MIP solv
 * [ALNS](https://github.com/N-Wouda/ALNS/) for adaptive large neighborhood search
 * [SCIP](https://scipopt.org/) and [Gurobi](https://www.gurobi.com/) for solving mixed-integer linear programming problems. 
 
-ParBalans([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies both at the outer configuration level and the inner branch-and-bound level to accelerate search and exploit modern hardware architectures with multiple cores. 
+ParBalans ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies both at the outer configuration level and the inner branch-and-bound level to accelerate search and exploit modern hardware architectures with multiple cores. 
 
 More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP).
 
