@@ -13,7 +13,7 @@ from tests.test_base import BaseTest
 
 class CorrectnessTest(BaseTest):
 
-    BaseTest.mip_solver = "scip"
+    BaseTest.mip_solver = Constants.scip_solver
 
     is_skip = True
 

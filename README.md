@@ -13,7 +13,7 @@ The framework integrates several powerful components into a highly configurable,
 
 More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP).
 
-Balans is developed collaboratively by the AI Center of Excellence at Fidelity Investments, the University of Southern California.
+Balans is developed collaboratively by the AI Center of Excellence at Fidelity Investments and the University of Southern California.
 
 ## Quick Start
 ```python
