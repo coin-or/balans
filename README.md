@@ -1,14 +1,19 @@
 # Balans: Bandit-based Adaptive Large Neighborhood Search
+Balans([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through  
+multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
 
-Balans is a meta-solver for Mixed-Integer Programming problems (MIPs) using 
-multi-armed bandit-based adaptive large neighborhood search.
+Balans combines several powerful components into a highly configurable, MIP solver agnostic, modular and extendable, open-source software: 
+* [MABWiser](https://github.com/fidelity/mabwiser/) for contextual multi-armed bandits
+* [ALNS](https://github.com/N-Wouda/ALNS/) for adaptive large neighborhood search
+* [SCIP](https://scipopt.org/) and [Gurobi](https://www.gurobi.com/) for solving mixed-integer linear programming problems. 
 
-The hybrid framework integrates [MABWiser](https://github.com/fidelity/mabwiser/) for contextual multi-armed bandits,
-[ALNS](https://github.com/N-Wouda/ALNS/) for adaptive large neighborhood search, and 
-[SCIP](https://scipopt.org/) or [Gurobi](https://www.gurobi.com/) for solving mixed-integer linear programming problems. 
+ParBalans([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies both at the outer configuration level and the inner branch-and-bound level to accelerate search and exploit modern hardware architectures with multiple cores. 
+
+More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP).
+
+Balans is developed by the AI Center of Excellence at Fidelity Investments, University of Southern California, and Northeastern University. 
 
 ## Quick Start
-
 ```python
 # ALNS for adaptive large neigborhood search
 from alns.select import MABSelector
@@ -69,15 +74,14 @@ print("Best solution objective:", result.best_state.objective())
 ```
 
 ## Quick Start - ParBalans
-
 ```python
 # Parallel version of Balans, that runs several configurations parallely
 from balans.solver import ParBalans
 from alns.stop import MaxIterations
 
 # ParBalans to run different Balans configs in parallel and save results
-parbalans = ParBalans(n_jobs=2,                 # parallel Balans runs
-                      n_mip_jobs=1,             # parallel MIP threads, Only supported by Gurobi solver
+parbalans = ParBalans(n_jobs=2,                 # Outer-level: parallel Balans configurations
+                      n_mip_jobs=1,             # Inner-level: parallel BnB search. Only supported by Gurobi solver
                       mip_solver="scip",
                       output_dir="results/", 
                       stop=MaxIterations(10))   # Stop criteria per each run
@@ -89,7 +93,6 @@ best_solution, best_objective = parbalans.run(instance_path)
 # Results of the best found solution and the objective
 print("Best solution:", best_solution)
 print("Best solution objective:", best_objective)
-
 ```
 
 ## Available Destroy Operators
@@ -114,24 +117,21 @@ print("Best solution objective:", best_objective)
 * Repair MIP
 
 ## Installation
-
 Balans requires Python 3.10+ can be installed from PyPI via `pip install balans`. 
 
 ## Test Your Setup
-
 ```
 $ cd balans
 $ python -m unittest discover tests
 ```
 
 ## Citation
-
 If you use Balans in a publication, please cite it as:
 
 ```bibtex
-  @inproceedings{ijcai2025p286,
+  @inproceedings{balans,
     title     = {Balans: Multi-Armed Bandits-based Adaptive Large Neighborhood Search for Mixed-Integer Programming Problems},
-    author    = {Cai, Junyang and Kadioğlu, Serdar and Dilkina, Bistra},
+    author    = {Cai, Junyang and Kadıoğlu, Serdar and Dilkina, Bistra},
     booktitle = {Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence, {IJCAI-25}},
     publisher = {International Joint Conferences on Artificial Intelligence Organization},
     editor    = {James Kwok},
@@ -141,6 +141,16 @@ If you use Balans in a publication, please cite it as:
     note      = {Main Track},
     doi       = {10.24963/ijcai.2025/286},
     url       = {https://doi.org/10.24963/ijcai.2025/286},
+  }
+
+  @misc{parbalans,
+        title={ParBalans: Parallel Multi-Armed Bandits-based Adaptive Large Neighborhood Search}, 
+        author={Alican Yilmaz and Junyang Cai and Serdar Kadıoğlu and Bistra Dilkina},
+        year={2025},
+        eprint={2508.06736},
+        archivePrefix={arXiv},
+        primaryClass={cs.AI},
+        url={https://arxiv.org/abs/2508.06736}, 
   }
 ```
 
