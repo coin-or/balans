@@ -3,10 +3,10 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
   schedule:
     - cron: '00 12 * * 1' # Runs every Monday at 8:00 AM EST
 
@@ -19,16 +19,15 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Check
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -e .
-          python3 -m unittest discover -v tests
-          python3 setup.py install
+          python -m unittest discover -v tests
