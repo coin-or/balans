@@ -3,9 +3,11 @@ CHANGELOG
 =========
 
 -------------------------------------------------------------------------------
-Nov 24, 2025 2.1.1
+Nov 24, 2025 2.1.2
 -------------------------------------------------------------------------------
-- update setup.py to move from Python 3.8 to Python 3.10+.
+- Migrate from setup.py to pyproject.toml
+- Going forward, instead of using `python setup.py sdist bdist_wheel` use `python -m build` (requires `pip install build`)
+- Followed by `twine upload dist/* --verbose`
 
 -------------------------------------------------------------------------------
 Nov 24, 2025 2.1.0

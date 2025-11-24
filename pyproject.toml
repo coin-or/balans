@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "balans"
+description = "Balans: Bandit-based Adaptive Large Neighborhood Search"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [
+    {name = "skadio"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "alns[mabwiser]",
+    "mabwiser",
+    "numpy",
+    "pyscipopt",
+    "gurobipy"
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://github.com/skadio/balans"
+Source = "https://github.com/skadio/balans"
+
+[tool.setuptools.dynamic]
+version = {attr = "balans._version.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ["*.tests", "*.tests.*", "tests.*", "tests", "notebooks"]
