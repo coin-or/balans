@@ -109,7 +109,7 @@ class SolverTest(BaseTest):
         initial_index_to_val, initial_obj_val = instance.initial_solve()
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         for i in destroy_ops:
             alns.add_destroy_operator(i)
         alns.add_repair_operator(RepairOperators.Repair)
@@ -154,7 +154,7 @@ class SolverTest(BaseTest):
         initial2 = _State(instance, initial_index_to_val, -30)
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         for i in destroy_ops:
             alns.add_destroy_operator(i)
         alns.add_repair_operator(RepairOperators.Repair)
@@ -206,7 +206,7 @@ class SolverTest(BaseTest):
         initial_index_to_val, initial_obj_val = instance.initial_solve()
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         for i in destroy_ops:
             alns.add_destroy_operator(i)
         alns.add_repair_operator(RepairOperators.Repair)

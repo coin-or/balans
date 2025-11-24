@@ -419,7 +419,7 @@ class Balans:
                                previous_index_to_val=self.initial_index_to_val)
 
         # Create ALNS
-        self.alns = ALNS(np.random.RandomState(self.alns_seed))
+        self.alns = ALNS(np.random.default_rng(self.alns_seed))
 
         # Set ALNS operators according to MIP type, and if successful, start iterating ALNS
         if self._set_alns_operators():

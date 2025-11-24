@@ -89,7 +89,7 @@ class RinsTest(BaseTest):
         initial_index_to_val, initial_obj_val = instance.initial_solve()
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         alns.add_destroy_operator(DestroyOperators.Rins_25)
         alns.add_repair_operator(RepairOperators.Repair)
 
@@ -127,7 +127,7 @@ class RinsTest(BaseTest):
         initial_index_to_val, initial_obj_val = instance.initial_solve()
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         alns.add_destroy_operator(DestroyOperators.Rins_25)
         alns.add_repair_operator(RepairOperators.Repair)
 

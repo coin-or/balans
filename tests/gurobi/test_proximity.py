@@ -67,7 +67,7 @@ class ProximityTest(BaseTest):
         initial2 = _State(instance, index_to_val, -40)
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         alns.add_destroy_operator(DestroyOperators.Proximity_05)
         alns.add_repair_operator(RepairOperators.Repair)
 

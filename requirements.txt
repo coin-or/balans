@@ -1,4 +1,4 @@
-alns[mabwiser]==6.0.0
+alns[mabwiser]
 mabwiser
 numpy
 pyscipopt

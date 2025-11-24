@@ -122,7 +122,7 @@ class MutationTest(BaseTest):
         initial2 = _State(instance, initial_index_to_val, -30)
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         alns.add_destroy_operator(DestroyOperators.Mutation_50)
         alns.add_repair_operator(RepairOperators.Repair)
 
@@ -166,7 +166,7 @@ class MutationTest(BaseTest):
         initial2 = _State(instance, initial_index_to_val, -30)
 
         # Create ALNS and add one or more destroy and repair operators
-        alns = ALNS(np.random.RandomState(seed))
+        alns = ALNS(np.random.default_rng(seed))
         alns.add_destroy_operator(DestroyOperators.Mutation_50)
         alns.add_repair_operator(RepairOperators.Repair)
 
