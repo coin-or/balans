@@ -4,13 +4,13 @@ Balans requires Python 3.10+ and can be installed from PyPI using `pip install b
 * In principle, Balans is MIP solver-agnostic.
 * In practice, Balans is tested with the open-source `SCIP` solver and the commercial `Gurobi` solver.
 * By default, Balans uses `SCIP`, equivalent to initialization with `Balans(mip_solver="scip")`
-* Assuming a valid Gurobi license, Balans can be initialized with `Balans(mip_solver="gurobi")`.
+* Assuming a valid Gurobi license, Balans can also be initialized with `Balans(mip_solver="gurobi")`.
 
 
 ## Installation from Source Code
 ```
 git clone https://github.com/skadio/balans.git
-cd mabwiser
+cd balans
 pip install setuptools wheel # if wheel is not installed
 python setup.py sdist bdist_wheel
 pip install dist/balans-X.X.X-py3-none-any.whl
