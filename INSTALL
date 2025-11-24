@@ -11,8 +11,8 @@ Balans requires Python 3.10+ and can be installed from PyPI using `pip install b
 ```
 git clone https://github.com/skadio/balans.git
 cd balans
-pip install setuptools wheel # if wheel is not installed
-python setup.py sdist bdist_wheel
+pip install build # if build is not installed
+python -m build
 pip install dist/balans-X.X.X-py3-none-any.whl
 ```
 
