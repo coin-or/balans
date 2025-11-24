@@ -23,7 +23,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests", "notebooks"]),
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.10+",
         "Operating System :: OS Independent",
     ],
     project_urls={
