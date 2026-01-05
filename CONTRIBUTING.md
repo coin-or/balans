@@ -1,6 +1,6 @@
 # Contributing to Balans
 
-Thank you for contributing to Balans! This guide will help you get started and know what to expect. All contributions and project spaces are subject to our [Code of Conduct](CoDE_OF_CONDUCT.md).
+Thank you for contributing to Balans! This guide will help you get started and know what to expect. All contributions and project spaces are subject to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 We welcome all types of contributions, including:
 
