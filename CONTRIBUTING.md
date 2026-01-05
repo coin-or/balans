@@ -66,4 +66,4 @@ Anyone may open an issue and apply a `good first issue` or `help wanted` label f
 
 ## Getting help
 
-If you have other questions about this project, please [open an issue](https://github.com/coin-or/balans/issues). To reach the Fidelity OSPO directly, please email [serdark@cs.brown.edu](mailto:serdark@cs.brown.edu).
+If you have other questions about this project, please [open an issue](https://github.com/coin-or/balans/issues).
