@@ -1,6 +1,6 @@
-# Contributing to Mab2Rec
+# Contributing to Balans
 
-Thank you for contributing to Mab2Rec! This guide will help you get started and know what to expect. All contributions and project spaces are subject to our [Code of Conduct](CoDE_OF_CONDUCT.md).
+Thank you for contributing to Balans! This guide will help you get started and know what to expect. All contributions and project spaces are subject to our [Code of Conduct](CoDE_OF_CONDUCT.md).
 
 We welcome all types of contributions, including:
 
@@ -14,7 +14,7 @@ If you end up using our library in a project, give us a star on GitHub!
 
 ## How to report a bug
 
-Please [open an issue](https://github.com/skadio/balans/issues) **unless** you are making a significant security disclosure.
+Please [open an issue](https://github.com/coin-or/balans/issues) **unless** you are making a significant security disclosure.
 
 When reporting a bug, please start from a fresh pull of the default branch and document how you encountered the issue. Reports with insufficient detail and which we can't reproduce may be closed without action.
 
@@ -66,4 +66,4 @@ Anyone may open an issue and apply a `good first issue` or `help wanted` label f
 
 ## Getting help
 
-If you have other questions about this project, please [open an issue](https://github.com/fidelity/mab2rec/issues). To reach the Fidelity OSPO directly, please email [opensource@fmr.com](mailto:opensource@fmr.com).
+If you have other questions about this project, please [open an issue](https://github.com/coin-or/balans/issues). To reach the Fidelity OSPO directly, please email [serdark@cs.brown.edu](mailto:serdark@cs.brown.edu).
