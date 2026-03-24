@@ -19,7 +19,8 @@ model.setParam("TimeLimit", 600)
 model.optimize()
 
 # Solution
-print("Best objective:", model.getObjective())
+if model.Status in (grb.GRB.OPTIMAL, grb.GRB.TIME_LIMIT) and model.SolCount > 0:
+    print("Best objective:", model.ObjVal)
 # for v in model.getVars():
 #     print('%s %g' % (v.varName, v.x))
 
