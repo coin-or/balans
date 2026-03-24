@@ -9,7 +9,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [
-    {name = "skadio"}
+    {name = "skadio"},
+    {name = "caidong1129"},
+    {name = "alicanylmz"}
 ]
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -25,8 +27,8 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Documentation = "https://github.com/skadio/balans"
-Source = "https://github.com/skadio/balans"
+Documentation = "https://github.com/coin-or/balans"
+Source = "https://github.com/coin-or/balans"
 
 [tool.setuptools.dynamic]
 version = {attr = "balans._version.__version__"}

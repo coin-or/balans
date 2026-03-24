@@ -9,7 +9,7 @@ Balans requires Python 3.10+ and can be installed from PyPI using `pip install b
 
 ## Installation from Source Code
 ```
-git clone https://github.com/skadio/balans.git
+git clone https://github.com/coin-or/balans.git
 cd balans
 pip install build # if build is not installed
 python -m build
@@ -18,7 +18,7 @@ pip install dist/balans-X.X.X-py3-none-any.whl
 
 ## Test Your Setup
 ```
-$ git clone https://github.com/skadio/balans.git
+$ git clone https://github.com/coin-or/balans.git
 $ cd balans
 $ python -m unittest discover tests
 ```
