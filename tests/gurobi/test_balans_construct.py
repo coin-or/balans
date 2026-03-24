@@ -74,7 +74,7 @@ class BalansConstructGurobiTest(BaseTest):
         stop = MaxIterations(5)
         seed = 42
 
-        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed, mip_solver="gurobi")
+        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed, mip_solver=self.mip_solver)
         self.assertEqual(b.seed, 42)
         self.assertEqual(len(b.destroy_ops), 2)
         self.assertEqual(len(b.repair_ops), 1)
@@ -101,7 +101,7 @@ class BalansConstructGurobiTest(BaseTest):
         accept = HillClimbing()
         stop = MaxIterations(1)
 
-        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed=1283, mip_solver="gurobi")
+        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 8)
         # Verify each operator function name
         op_names = [op.__name__ for op in b.destroy_ops]
@@ -123,7 +123,7 @@ class BalansConstructGurobiTest(BaseTest):
         accept = HillClimbing()
         stop = MaxIterations(1)
 
-        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed=1283, mip_solver="gurobi")
+        b = Balans(destroy_ops, repair_ops, selector, accept, stop, seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 1)
         self.assertEqual(b.destroy_ops[0].__name__, "mutation_25")
 
@@ -138,7 +138,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, MABSelector)
 
     def test_selector_mab_epsilon_greedy(self):
@@ -148,7 +148,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[5, 2, 1, 0], num_destroy=2, num_repair=1,
                                learning_policy=LearningPolicy.EpsilonGreedy(epsilon=0.15))
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, MABSelector)
         self.assertEqual(b.selector.scores, [5, 2, 1, 0])
 
@@ -159,7 +159,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[3, 2, 1, 0], num_destroy=2, num_repair=1,
                                learning_policy=LearningPolicy.Softmax(tau=1.5))
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, MABSelector)
 
     def test_selector_mab_ucb1(self):
@@ -169,7 +169,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[3, 2, 1, 0], num_destroy=2, num_repair=1,
                                learning_policy=LearningPolicy.UCB1(alpha=1.0))
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, MABSelector)
 
     def test_selector_roulette_wheel(self):
@@ -178,7 +178,7 @@ class BalansConstructGurobiTest(BaseTest):
         repair_ops = [RepairOperators.Repair]
         selector = RouletteWheel(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1, decay=0.5)
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, RouletteWheel)
 
     def test_selector_random_select(self):
@@ -187,7 +187,7 @@ class BalansConstructGurobiTest(BaseTest):
         repair_ops = [RepairOperators.Repair]
         selector = RandomSelect(num_destroy=2, num_repair=1)
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, RandomSelect)
 
     def test_selector_alpha_ucb(self):
@@ -196,7 +196,7 @@ class BalansConstructGurobiTest(BaseTest):
         repair_ops = [RepairOperators.Repair]
         selector = AlphaUCB(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1, alpha=1.0)
         b = Balans(destroy_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.selector, AlphaUCB)
 
     # ==================================================================
@@ -211,7 +211,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, HillClimbing)
 
     def test_accept_simulated_annealing(self):
@@ -223,7 +223,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=sa,
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, SimulatedAnnealing)
         self.assertEqual(b.accept.start_temperature, 20)
         self.assertEqual(b.accept.end_temperature, 1)
@@ -237,7 +237,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=AlwaysAccept(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, AlwaysAccept)
 
     def test_accept_record_to_record_travel(self):
@@ -249,7 +249,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=rrt,
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, RecordToRecordTravel)
 
     def test_accept_great_deluge(self):
@@ -261,7 +261,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=gd,
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, GreatDeluge)
 
     def test_accept_random_accept(self):
@@ -273,7 +273,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=ra,
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.accept, RandomAccept)
 
     # ==================================================================
@@ -288,7 +288,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(10), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(10), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.stop, MaxIterations)
         self.assertEqual(b.stop.max_iterations, 10)
 
@@ -300,7 +300,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxRuntime(600), seed=1283, mip_solver="gurobi")
+            stop=MaxRuntime(600), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.stop, MaxRuntime)
         self.assertEqual(b.stop.max_runtime, 600)
 
@@ -312,7 +312,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=NoImprovement(100), seed=1283, mip_solver="gurobi")
+            stop=NoImprovement(100), seed=1283, mip_solver=self.mip_solver)
         self.assertIsInstance(b.stop, NoImprovement)
 
     # ==================================================================
@@ -327,7 +327,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=99999, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=99999, mip_solver=self.mip_solver)
         self.assertEqual(b.seed, 99999)
 
     def test_n_mip_jobs_stored_correctly(self):
@@ -338,7 +338,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, n_mip_jobs=4, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, n_mip_jobs=4, mip_solver=self.mip_solver)
         self.assertEqual(b.n_mip_jobs, 4)
 
     def test_mip_solver_gurobi(self):
@@ -349,7 +349,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(b.mip_solver_str, "gurobi")
 
     # ==================================================================
@@ -435,7 +435,7 @@ class BalansConstructGurobiTest(BaseTest):
     def test_config_with_explicit_mip_solver_override(self):
         """Explicit mip_solver kwarg should override config mip_solver."""
         config_path = os.path.normpath(os.path.join(Constants.DATA_TEST, '..', 'configs', 'test_config.json'))
-        b = Balans(config=config_path, mip_solver="gurobi")
+        b = Balans(config=config_path, mip_solver=self.mip_solver)
         self.assertEqual(b.mip_solver_str, "gurobi")
 
     # ==================================================================
@@ -900,7 +900,7 @@ class BalansConstructGurobiTest(BaseTest):
                 selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1,
                                      learning_policy=LearningPolicy.ThompsonSampling()),
                 accept=HillClimbing(),
-                stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+                stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_destroy_type_none(self):
         """Passing None as a destroy op should raise TypeError."""
@@ -911,7 +911,7 @@ class BalansConstructGurobiTest(BaseTest):
                 selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1,
                                      learning_policy=LearningPolicy.ThompsonSampling()),
                 accept=HillClimbing(),
-                stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+                stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_repair_type_string(self):
         """Passing a string as repair op should raise TypeError."""
@@ -922,7 +922,7 @@ class BalansConstructGurobiTest(BaseTest):
                 selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=2,
                                      learning_policy=LearningPolicy.ThompsonSampling()),
                 accept=HillClimbing(),
-                stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+                stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_selector_type(self):
         """Passing a string as selector should raise TypeError."""
@@ -932,7 +932,7 @@ class BalansConstructGurobiTest(BaseTest):
                 repair_ops=[RepairOperators.Repair],
                 selector="INVALID",
                 accept=HillClimbing(),
-                stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+                stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_accept_type(self):
         """Passing a wrong type as accept should raise TypeError."""
@@ -943,7 +943,7 @@ class BalansConstructGurobiTest(BaseTest):
                 selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                      learning_policy=LearningPolicy.ThompsonSampling()),
                 accept=MaxIterations(5),  # wrong type
-                stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+                stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_stop_type(self):
         """Passing a string as stop should raise TypeError."""
@@ -953,7 +953,7 @@ class BalansConstructGurobiTest(BaseTest):
                 repair_ops=[RepairOperators.Repair],
                 selector=None,
                 accept=HillClimbing(),
-                stop="INVALID", seed=1283, mip_solver="gurobi")
+                stop="INVALID", seed=1283, mip_solver=self.mip_solver)
 
     def test_invalid_mip_solver_string(self):
         """Invalid mip_solver string should raise ValueError."""
@@ -1008,7 +1008,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("gurobi", s)
 
@@ -1020,7 +1020,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("2 Destroy Operators", s)
         self.assertIn("1 Repair Operators", s)
@@ -1033,7 +1033,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("MABSelector", s)
 
@@ -1045,7 +1045,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("SimulatedAnnealing", s)
         self.assertIn("Start Temperature", s)
@@ -1058,7 +1058,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(7), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(7), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("MaxIterations", s)
 
@@ -1070,7 +1070,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=1, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=77777, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=77777, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("77777", s)
 
@@ -1082,7 +1082,7 @@ class BalansConstructGurobiTest(BaseTest):
             selector=MABSelector(scores=[1, 1, 0, 0], num_destroy=2, num_repair=1,
                                  learning_policy=LearningPolicy.ThompsonSampling()),
             accept=HillClimbing(),
-            stop=MaxIterations(1), seed=1283, mip_solver="gurobi")
+            stop=MaxIterations(1), seed=1283, mip_solver=self.mip_solver)
         s = str(b)
         self.assertIn("crossover", s)
         self.assertIn("rens_50", s)
@@ -1134,7 +1134,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=len(lb_ops), num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(lb_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 19)
 
     def test_mutation_operators_range(self):
@@ -1155,7 +1155,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=len(mut_ops), num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(mut_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 19)
 
     def test_proximity_operators_range(self):
@@ -1176,7 +1176,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=len(prox_ops), num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(prox_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 20)
 
     def test_rens_operators_range(self):
@@ -1197,7 +1197,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=len(rens_ops), num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(rens_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 19)
 
     def test_rins_operators_range(self):
@@ -1218,7 +1218,7 @@ class BalansConstructGurobiTest(BaseTest):
         selector = MABSelector(scores=[1, 1, 0, 0], num_destroy=len(rins_ops), num_repair=1,
                                learning_policy=LearningPolicy.ThompsonSampling())
         b = Balans(rins_ops, repair_ops, selector, HillClimbing(), MaxIterations(1),
-                   seed=1283, mip_solver="gurobi")
+                   seed=1283, mip_solver=self.mip_solver)
         self.assertEqual(len(b.destroy_ops), 19)
 
     # ==================================================================
