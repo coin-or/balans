@@ -14,7 +14,7 @@ More broadly, Balans is an integration technology at the intersection of adaptiv
 
 Balans is a collaborative effort between academia and industry, developed by Brown University, the University of Southern California, and the AI Center of Excellence at Fidelity Investments. The project is contributed to the [COIN-OR Foundation](https://www.coin-or.org/).
 
-## Quick Start
+## Quick Start - Balans
 ```python
 # Balans meta-solver for solving mixed-integer programming problems
 from balans.solver import Balans
