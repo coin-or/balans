@@ -1,0 +1,32 @@
+{
+  "seed": 55312,
+  "destroy_operators": [
+    "Crossover",
+    "Mutation_10",
+    "Rins_10",
+    "Rins_50",
+    "Rens_40",
+    "Proximity_030",
+    "Local_Branching_20"
+  ],
+  "repair_operators": [
+    "Repair"
+  ],
+  "selector": {
+    "type": "MABSelector",
+    "scores": [
+      16,
+      4,
+      2,
+      1
+    ],
+    "learning_policy": {
+      "type": "Softmax",
+      "tau": 2.828498
+    }
+  },
+  "acceptance": {
+    "type": "SimulatedAnnealing",
+    "step": 0.487183
+  }
+}
