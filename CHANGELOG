@@ -12,9 +12,9 @@ Feb 15, 2025 2.2.0
 - Minor: Update readme
 
 -------------------------------------------------------------------------------
-Feb 15, 2025 2.1.3
+Jan 5, 2026 2.1.3
 -------------------------------------------------------------------------------
-- Balans solver is contributed to COIN-OR Foundation
+- The project is contributed to COIN-OR Foundation and migrated from https://github.com/skadio/balans to https://github.com/coin-or/balans
 
 -------------------------------------------------------------------------------
 Nov 24, 2025 2.1.2
