@@ -19,7 +19,7 @@ model.setParam("TimeLimit", 600)
 model.optimize()
 
 # Solution
-print("Best objective:", model.getObjective())
+print("Best objective:", model.ObjVal)
 # for v in model.getVars():
 #     print('%s %g' % (v.varName, v.x))
 

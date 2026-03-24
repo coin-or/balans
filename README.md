@@ -22,7 +22,8 @@ from balans.solver import Balans
 # Balans
 balans = Balans()
 # See also: balans = Balans(config="configs/default.json")
-# See also: main_balans.py for programmatic configuration
+# See also: main.py for programmatic configuration
+# See also: "balans /path/to/problem.mps" for command-line usage
 
 # Run a mip instance to retrieve results 
 instance_path = "tests/data/noswot.mps"
@@ -76,7 +77,9 @@ print("Best solution objective:", best_objective)
 * Repair MIP
 
 ## Installation
-Balans requires Python 3.10+ can be installed from PyPI via `pip install balans`. More details in [INSTALL](INSTALL). 
+**Balans** requires Python 3.10+ can be installed from PyPI via `pip install balans`.
+once installed, it can be used from the command line via `balans /path/to/problem.mps`
+More details in [INSTALL](INSTALL). 
 
 ## Citation
 If you use Balans in a publication, please cite it as:

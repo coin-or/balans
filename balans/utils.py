@@ -115,9 +115,9 @@ class ConfigFactory:
     requires an operator map that lives in solver.py (to avoid circular imports).
     """
 
-    # Default config file shipped with the package
+    # Default config file shipped with the package (lives inside balans/configs/)
     DEFAULT_CONFIG_PATH = os.path.normpath(os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), '..', 'configs', 'default.json'))
+        os.path.dirname(os.path.abspath(__file__)), 'configs', 'default.json'))
 
     # ----- Learning Policy -----
     @staticmethod

@@ -1227,7 +1227,7 @@ class BalansConstructScipTest(BaseTest):
     # ==================================================================
 
     def test_main_example_construction(self):
-        """The main_balans.py example configuration should construct successfully."""
+        """The main.py example configuration should construct successfully."""
         destroy_ops = [DestroyOperators.Crossover,
                        DestroyOperators.Mutation_25,
                        DestroyOperators.Mutation_50,
