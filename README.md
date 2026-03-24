@@ -1,4 +1,4 @@
-[![ci](https://github.com/skadio/balans/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/skadio/balans/actions/workflows/ci.yml) [![PyPI version fury.io](https://badge.fury.io/py/balans.svg)](https://pypi.python.org/pypi/balans/) [![PyPI license](https://img.shields.io/pypi/l/balans.svg)](https://pypi.python.org/pypi/balans/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![Downloads](https://static.pepy.tech/personalized-badge/balans?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/balans)
+[![A COIN-OR Project](https://coin-or.github.io/coin-or-badge.png)](https://www.coin-or.org) [![ci](https://github.com/skadio/balans/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/skadio/balans/actions/workflows/ci.yml) [![PyPI version fury.io](https://badge.fury.io/py/balans.svg)](https://pypi.python.org/pypi/balans/) [![PyPI license](https://img.shields.io/pypi/l/balans.svg)](https://pypi.python.org/pypi/balans/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![Downloads](https://static.pepy.tech/personalized-badge/balans?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads)](https://pepy.tech/project/balans)
 
 # Balans: Bandit-based Adaptive Large Neighborhood Search
 **Balans** ([IJCAI'25](https://www.ijcai.org/proceedings/2025/286)) is an online-learning meta-solver designed to tackle Mixed-Integer Programming problems (MIPs) through multi-armed bandit-based adaptive large neighborhood search strategy, ALNS(MIP).
@@ -12,7 +12,7 @@ The framework integrates several powerful components into a highly configurable,
 
 More broadly, Balans is an integration technology at the intersection of adaptive search, meta-heuristics, multi-armed bandits, and mixed integer programming. When configured with a single neighborhood, it generalizes and subsumes prior work on Large Neighborhood Search for MIP, LNS(MIP). A detailed description of the framework, algorithms, and experimental results can be found in our [IJCAI'25 presentation](https://nbviewer.org/github/skadio/skadio.github.io/blob/master/files/2025_IJCAI_Balans_Kadioglu.pdf).
 
-Balans is developed collaboratively by the AI Center of Excellence at Fidelity Investments and the University of Southern California.
+Balans is a collaborative effort between academia and industry, developed by Brown University, the University of Southern California, and the AI Center of Excellence at Fidelity Investments. The project is contributed to the [COIN-OR Foundation](https://www.coin-or.org/).
 
 ## Quick Start
 ```python
