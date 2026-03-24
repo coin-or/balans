@@ -21,6 +21,8 @@ model.optimize()
 # Solution
 if model.Status in (grb.GRB.OPTIMAL, grb.GRB.TIME_LIMIT) and model.SolCount > 0:
     print("Best objective:", model.ObjVal)
+else:
+    print("No solution found (status:", model.Status, ")")
 # for v in model.getVars():
 #     print('%s %g' % (v.varName, v.x))
 
