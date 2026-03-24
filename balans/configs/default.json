@@ -1,57 +1,34 @@
 {
-  "mip_solver": "scip",
-  "seed": 1283,
-  "n_mip_jobs": 1,
-
+  "seed": 15035,
   "destroy_operators": [
     "Crossover",
-    "Mutation_25",
     "Mutation_50",
-    "Mutation_75",
-    "Local_Branching_10",
-    "Local_Branching_25",
-    "Local_Branching_50",
-    "Proximity_005",
-    "Proximity_015",
-    "Proximity_030",
-    "Rens_25",
+    "Rins_40",
+    "Rens_40",
     "Rens_50",
-    "Rens_75",
-    "Rins_25",
-    "Rins_50",
-    "Rins_75"
+    "Proximity_005",
+    "Local_Branching_10",
+    "Local_Branching_20",
+    "Local_Branching_30",
+    "Local_Branching_50"
   ],
-
   "repair_operators": [
     "Repair"
   ],
-
   "selector": {
     "type": "MABSelector",
-    "scores": [1, 1, 0, 0],
+    "scores": [
+      8,
+      4,
+      2,
+      1
+    ],
     "learning_policy": {
-      "type": "ThompsonSampling"
+      "type": "Softmax",
+      "tau": 1.359686
     }
   },
-
   "acceptance": {
-    "type": "SimulatedAnnealing",
-    "start_temperature": 20,
-    "end_temperature": 1,
-    "step": 0.1
-  },
-
-  "stop": {
-    "type": "MaxIterations",
-    "max_iterations": 10
-  },
-
-  "constants": {
-    "timelimit_first_solution": 20,
-    "timelimit_random_feasible": 20,
-    "timelimit_alns_iteration": 60,
-    "timelimit_local_branching_iteration": 150,
-    "M": 1000
+    "type": "HillClimbing"
   }
 }
-
