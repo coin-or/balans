@@ -1,6 +1,7 @@
 import copy
 
 from balans.base_state import _State
+from balans.utils import timestamp
 
 
 def dins(current: _State, rnd_state) -> _State:
@@ -10,8 +11,8 @@ def dins(current: _State, rnd_state) -> _State:
     #  If a variable is inside the Set J, it is part of the destroy set.
     #  Send the dins set (Set J) and local branching size to base_instance.
 
-    print("*** Operator: ", "DINS")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: DINS")
+    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

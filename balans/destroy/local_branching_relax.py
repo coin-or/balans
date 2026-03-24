@@ -2,6 +2,7 @@
 import copy
 
 from balans.base_state import _State
+from balans.utils import timestamp
 
 
 # def sort_list_with_indices(lst):
@@ -18,8 +19,8 @@ from balans.base_state import _State
 #     return sorted_values, sorted_indices
 
 def local_branching_relax(current: _State, rnd_state, delta) -> _State:
-    print("*** Operator: ", "LB relax")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: LB relax")
+    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

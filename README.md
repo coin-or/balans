@@ -16,57 +16,16 @@ Balans is developed collaboratively by the AI Center of Excellence at Fidelity I
 
 ## Quick Start
 ```python
-# ALNS for adaptive large neigborhood search
-from alns.select import MABSelector
-from alns.accept import HillClimbing, SimulatedAnnealing
-from alns.stop import MaxIterations, MaxRuntime
-
-# MABWiser for contextual multi-armed bandits
-from mabwiser.mab import LearningPolicy
-
-# Balans meta-solver for solving mixed integer programming problems
-from balans.solver import Balans, DestroyOperators, RepairOperators
-
-# Destroy operators
-destroy_ops = [DestroyOperators.Crossover,
-               DestroyOperators.Dins,
-               DestroyOperators.Mutation_25,
-               DestroyOperators.Local_Branching_10,
-               DestroyOperators.Rins_25,
-               DestroyOperators.Proximity_05,
-               DestroyOperators.Rens_25,
-               DestroyOperators.Random_Objective]
-
-# Repair operators
-repair_ops = [RepairOperators.Repair]
-
-# Rewards for online learning feedback loop
-best, better, accept, reject = 4, 3, 2, 1
-
-# Bandit selector
-selector = MABSelector(scores=[best, better, accept, reject],
-                       num_destroy=len(destroy_ops),
-                       num_repair=len(repair_ops),
-                       learning_policy=LearningPolicy.EpsilonGreedy(epsilon=0.50))
-
-# Acceptance criterion
-# accept = HillClimbing() # for pure exploitation 
-accept = SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1)
-
-# Stopping condition
-# stop = MaxRuntime(100)
-stop = MaxIterations(10)
+# Balans meta-solver for solving mixed-integer programming problems
+from balans.solver import Balans
 
 # Balans
-balans = Balans(destroy_ops=destroy_ops,
-                repair_ops=repair_ops,
-                selector=selector,
-                accept=accept,
-                stop=stop,
-                mip_solver="scip") # "gurobi"
+balans = Balans()
+# See also: balans = Balans(config="configs/default.json")
+# See also: main_balans.py for programmatic configuration
 
 # Run a mip instance to retrieve results 
-instance_path = "data/miplib/noswot.mps"
+instance_path = "tests/data/noswot.mps"
 result = balans.solve(instance_path)
 
 # Results of the best found solution and the objective
@@ -84,10 +43,10 @@ from alns.stop import MaxIterations
 parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configurations
                       n_mip_jobs=1,       # Inner-level: parallel BnB search. Only supported by Gurobi solver
                       mip_solver="scip",
-                      output_dir="results/")
+                      output_dir="parbalans/")
 
 # Run a mip instance to retrieve several results 
-instance_path = "data/miplib/noswot.mps"
+instance_path = "tests/data/noswot.mps"
 best_solution, best_objective = parbalans.run(instance_path)
 
 # Results of the best found solution and the objective

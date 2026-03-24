@@ -1,0 +1,39 @@
+{
+  "mip_solver": "scip",
+  "seed": 42,
+  "n_mip_jobs": 1,
+
+  "destroy_operators": [
+    "Crossover",
+    "Mutation_50",
+    "Rins_25"
+  ],
+
+  "repair_operators": [
+    "Repair"
+  ],
+
+  "selector": {
+    "type": "MABSelector",
+    "scores": [5, 2, 1, 0],
+    "learning_policy": {
+      "type": "EpsilonGreedy",
+      "epsilon": 0.15
+    }
+  },
+
+  "acceptance": {
+    "type": "HillClimbing"
+  },
+
+  "stop": {
+    "type": "MaxIterations",
+    "max_iterations": 1
+  },
+
+  "constants": {
+    "timelimit_first_solution": 10,
+    "timelimit_alns_iteration": 30
+  }
+}
+

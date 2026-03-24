@@ -1,7 +1,7 @@
 from typing import Tuple, Dict, Any
 
 from balans.base_mip import _BaseMIP
-from balans.utils import Constants
+from balans.utils import Constants, timestamp
 
 
 class _Instance:
@@ -54,7 +54,7 @@ class _Instance:
               local_branching_size=0,
               proximity_delta=0) -> Tuple[Dict[Any, float], float]:
 
-        print("\t Solve")
+        print(f"{timestamp()} \t Solve")
 
         # has_destroy to identify if any constraint added or objective function changed
         # If has_destroy = True, optimize the problem and get new sol and obj
@@ -85,7 +85,7 @@ class _Instance:
         # Proximity: Binary variables, modify objective, add new constraint
         if proximity_delta > 0:
             has_destroy = True
-            print("proximity_delta: ", proximity_delta)
+            # print("proximity_delta: ", proximity_delta)
             self.mip.proximity(index_to_val, obj_val, proximity_delta, self.binary_indexes)
 
         # RENS: Discrete variables, where the lp relaxation is not integral
@@ -102,8 +102,8 @@ class _Instance:
         # If no destroy, don't solve, quit with previous objective
         # e.g. when destroy set is empty.
         if not has_destroy:
-            print("No destroy to apply, don't call optimize()")
-            print("\t Current Obj:", starting_obj_val)
+            print(f"{timestamp()} \t No destroy to apply, don't call optimize()")
+            print(f"{timestamp()} \t Current Obj: {starting_obj_val}")
             # print("\t starting_index_to_val: ", starting_index_to_val)
             return starting_index_to_val, starting_obj_val
 
@@ -116,15 +116,15 @@ class _Instance:
 
         # If no solution found, go back
         if len(index_to_val) == 0:
-            print("No solution found, go back to previous state")
+            print(f"{timestamp()} \t No solution found, go back to previous state")
             # print("\t Current Obj:", starting_obj_val)
             return starting_index_to_val, starting_obj_val
 
         # Solution found but for transformed objectives (random_obj and proximity), find the original obj value
         if proximity_delta > 0 or has_random_obj:
             # Objective value of the solution found in transformed
-            print("\t Transformed obj: ", obj_val)
+            print(f"{timestamp()} \t Transformed obj: {obj_val}")
             obj_val = self.mip.get_obj_value(index_to_val)
 
-        print("\t Solve DONE!", obj_val)
+        print(f"{timestamp()} \t Solve DONE! {obj_val}")
         return index_to_val, obj_val

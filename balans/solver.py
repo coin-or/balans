@@ -39,7 +39,7 @@ from balans.destroy.rens import rens_05, rens_10, rens_15, rens_20, rens_25, ren
 from balans.destroy.rins import rins_05, rins_10, rins_15, rins_20, rins_25, rins_30, rins_35, rins_40, rins_45, \
     rins_50, rins_55, rins_60, rins_65, rins_70, rins_75, rins_80, rins_85, rins_90, rins_95
 from balans.repair.repair import repair
-from balans.utils import Constants, check_false, check_true, create_rng
+from balans.utils import Constants, ConfigFactory, check_false, check_true, create_rng, set_solve_start_time, timestamp, update_constants
 
 
 class DestroyOperators(NamedTuple):
@@ -279,6 +279,20 @@ StopType = (MaxIterations,
             NoImprovement,
             StoppingCriterion)
 
+# ---------------------------------------------------------------------------
+# Operator lookup maps: JSON config name -> function reference
+# ---------------------------------------------------------------------------
+_DESTROY_OP_MAP = {name: getattr(DestroyOperators, name)
+                   for name in dir(DestroyOperators)
+                   if not name.startswith('_') and name[0].isupper()
+                   and callable(getattr(DestroyOperators, name))}
+
+_REPAIR_OP_MAP = {name: getattr(RepairOperators, name)
+                  for name in dir(RepairOperators)
+                  if not name.startswith('_') and name[0].isupper()
+                  and callable(getattr(RepairOperators, name))}
+
+
 
 class Balans:
     """
@@ -310,46 +324,59 @@ class Balans:
     """
 
     def __init__(self,
-                 destroy_ops = None, # List
-                 repair_ops = None, # List
-                 selector = None, # SelectorType
-                 accept = None, # AcceptType
-                 stop = None, # StopType
-                 seed: int = Constants.default_seed,  # The random seed
-                 n_mip_jobs: int = 1,  # Number of threads for the solver
-                 mip_solver: str = Constants.default_solver  # MIP solver scip/gurobi
+                 destroy_ops=None,
+                 repair_ops=None,
+                 selector=None,
+                 accept=None,
+                 stop=None,
+                 seed: int = None,
+                 n_mip_jobs: int = None,
+                 mip_solver: str = None,
+                 *,
+                 config: str = None,
                  ):
 
-        # Validate arguments
+        # ------------------------------------------------------------------
+        # Resolve configuration: config file -> explicit overrides
+        # ------------------------------------------------------------------
+        # Always load a base config (explicit file or default.json).
+        # Then override with any explicitly provided parameters.
+        config_path = config if config is not None else ConfigFactory.DEFAULT_CONFIG_PATH
+        cfg = ConfigFactory.load(config_path)
+
+        # Apply constants overrides from the config file
+        if cfg.get('constants'):
+            update_constants(**cfg['constants'])
+
+        # Resolve each parameter: explicit arg wins over config value
         if destroy_ops is None:
-            destroy_ops = [DestroyOperators.Crossover,
-                           DestroyOperators.Mutation_25,
-                           DestroyOperators.Mutation_50,
-                           DestroyOperators.Mutation_75,
-                           DestroyOperators.Local_Branching_10,
-                           DestroyOperators.Local_Branching_25,
-                           DestroyOperators.Local_Branching_50,
-                           DestroyOperators.Proximity_005,
-                           DestroyOperators.Proximity_015,
-                           DestroyOperators.Proximity_030,
-                           DestroyOperators.Rens_25,
-                           DestroyOperators.Rens_50,
-                           DestroyOperators.Rens_75,
-                           DestroyOperators.Rins_25,
-                           DestroyOperators.Rins_50,
-                           DestroyOperators.Rins_75]
+            destroy_ops = ConfigFactory.resolve_operators(
+                cfg['destroy_operator_names'], _DESTROY_OP_MAP, kind="destroy operator")
         if repair_ops is None:
-            repair_ops = [RepairOperators.Repair]
-        if selector is None:
-            best, better, accept, reject = 1, 1, 0, 0
-            selector = MABSelector(scores=[best, better, accept, reject],
-                                   num_destroy=len(destroy_ops),
-                                   num_repair=len(repair_ops),
-                                   learning_policy=LearningPolicy.ThompsonSampling())
+            repair_ops = ConfigFactory.resolve_operators(
+                cfg['repair_operator_names'], _REPAIR_OP_MAP, kind="repair operator")
         if accept is None:
-            accept = SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1)
+            accept = cfg['accept']
         if stop is None:
-            stop = MaxIterations(10)
+            stop = cfg['stop']
+        if seed is None:
+            seed = cfg['seed']
+        if n_mip_jobs is None:
+            n_mip_jobs = cfg['n_mip_jobs']
+        if mip_solver is None:
+            mip_solver = cfg['mip_solver']
+
+        # Selector: build from config if not explicitly provided
+        if selector is None:
+            sel_cfg = cfg.get('selector_config')
+            if sel_cfg is not None:
+                selector = ConfigFactory.build_selector(sel_cfg, len(destroy_ops), len(repair_ops))
+            else:
+                # Fallback: default MABSelector
+                selector = MABSelector(scores=[1, 1, 0, 0],
+                                       num_destroy=len(destroy_ops),
+                                       num_repair=len(repair_ops),
+                                       learning_policy=LearningPolicy.ThompsonSampling())
 
         self._validate_balans_args(destroy_ops, repair_ops, selector, accept, stop, seed, n_mip_jobs, mip_solver)
 
@@ -389,6 +416,65 @@ class Balans:
     def initial_obj_val(self) -> float:
         return self._initial_obj_val
 
+    def __str__(self) -> str:
+        separator = "=" * 60
+        lines = [
+            separator,
+            "BALANS Configuration",
+            separator,
+            f"  MIP Solver          : {self.mip_solver_str}",
+            f"  Seed                : {self.seed}",
+            f"  MIP Jobs            : {self.n_mip_jobs}",
+            "",
+            f"  {len(self.destroy_ops)} Destroy Operators  :",
+        ]
+        for op in self.destroy_ops:
+            lines.append(f"    - {op.__name__}")
+        lines.append("")
+        lines.append(f"  {len(self.repair_ops)} Repair Operators   :")
+        for op in self.repair_ops:
+            lines.append(f"    - {op.__name__}")
+        lines.append("")
+
+        # Selector details
+        lines.append(f"  Selector            : {type(self.selector).__name__}")
+        if isinstance(self.selector, MABSelector):
+            lines.append(f"    Scores            : {self.selector.scores}")
+            lines.append(f"    Learning Policy   : {self.selector.mab.learning_policy}")
+        lines.append("")
+
+        # Acceptance details
+        lines.append(f"  Acceptance          : {type(self.accept).__name__}")
+        if isinstance(self.accept, SimulatedAnnealing):
+            lines.append(f"    Start Temperature : {self.accept.start_temperature}")
+            lines.append(f"    End Temperature   : {self.accept.end_temperature}")
+            lines.append(f"    Step              : {self.accept.step}")
+            lines.append(f"    Method            : {self.accept.method}")
+        elif isinstance(self.accept, RecordToRecordTravel):
+            lines.append(f"    Start Threshold   : {self.accept.start_threshold}")
+            lines.append(f"    End Threshold     : {self.accept.end_threshold}")
+            lines.append(f"    Step              : {self.accept.step}")
+            lines.append(f"    Method            : {self.accept.method}")
+        lines.append("")
+
+        # Stopping criterion details
+        lines.append(f"  Stopping Criterion  : {type(self.stop).__name__}")
+        if isinstance(self.stop, MaxIterations):
+            lines.append(f"    Max Iterations    : {self.stop.max_iterations}")
+        elif isinstance(self.stop, MaxRuntime):
+            lines.append(f"    Max Runtime       : {self.stop.max_runtime}s")
+        elif isinstance(self.stop, NoImprovement):
+            lines.append(f"    Max No Improvement: {self.stop._max_iterations}")
+        lines.append("")
+
+        lines.append("  ALNS Time Limits:")
+        lines.append(f"    First Solution    : {Constants.timelimit_first_solution}s")
+        lines.append(f"    Random Feasible   : {Constants.timelimit_random_feasible}s")
+        lines.append(f"    ALNS Iteration    : {Constants.timelimit_alns_iteration}s")
+        lines.append(f"    Local Branching   : {Constants.timelimit_local_branching_iteration}s")
+        lines.append(separator)
+        return "\n".join(lines)
+
     def solve(self, instance_path, index_to_val=None) -> Result:
         """
         instance_path: the path to the MIP instance file
@@ -403,15 +489,23 @@ class Balans:
         """
         self._validate_solve_args(instance_path)
 
+        # Start timing
+        set_solve_start_time()
+
+        # Print configuration
+        print(self)
+        print(f"{timestamp()} Solving instance: {instance_path}")
+
         # MIP is an instance of _BaseMIP created from given mip instance
         mip = create_mip_solver(instance_path, self.seed, self.n_mip_jobs, self.mip_solver_str)
 
         # Create instance with mip model created from mip instance
         self._instance = _Instance(mip, self.seed)
 
+        print(f"{timestamp()} Finding initial solution...")
         self._initial_index_to_val, self._initial_obj_val = self._instance.initial_solve(index_to_val=index_to_val)
 
-        print(">>> START objective:", self._initial_obj_val)
+        print(f"{timestamp()} >>> START objective: {self._initial_obj_val}")
         # print(">>> START values:", self._initial_index_to_val)
 
         # Initial state and solution
@@ -434,7 +528,7 @@ class Balans:
                     obj_list.append(-obj)
                 result.statistics._objectives = obj_list
 
-            print(">>> FINISH objective:", result.best_state.objective())
+            print(f"{timestamp()} >>> FINISH objective: {result.best_state.objective()}")
         else:
             result = None
 

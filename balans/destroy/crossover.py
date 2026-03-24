@@ -2,7 +2,7 @@ import copy
 import math
 
 from balans.base_state import _State
-from balans.utils import Constants
+from balans.utils import Constants, timestamp
 
 
 def crossover(current: _State, rnd_state) -> _State:
@@ -10,8 +10,8 @@ def crossover(current: _State, rnd_state) -> _State:
     #  If a DISCRETE variable x_rand = x_inc, do not change it.
     #  Otherwise, put it to the destroy set.
     #  Send the destroy set to base_instance.
-    print("*** Operator: ", "CROSSOVER")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: CROSSOVER")
+    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

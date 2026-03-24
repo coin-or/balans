@@ -1,6 +1,21 @@
 =========
 CHANGELOG
 =========
+
+-------------------------------------------------------------------------------
+Feb 15, 2025 2.2.0
+-------------------------------------------------------------------------------
+- Major: Add support for creating Balans from config.json files
+- Major: Add printouts for starting Balans configuration and timestamps at each step
+- Minor: Separate main_balans.py main_scip.py main_gurobi.py
+- Minor: Bug when calling Balans() lead to an error because of "accept" name clash in reward accept vs. accept criterion. Fixed now.
+- Minor: Update readme
+
+-------------------------------------------------------------------------------
+Feb 15, 2025 2.1.3
+-------------------------------------------------------------------------------
+- Balans solver is contributed to COIN-OR Foundation
+
 -------------------------------------------------------------------------------
 Nov 24, 2025 2.1.2
 -------------------------------------------------------------------------------

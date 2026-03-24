@@ -88,7 +88,7 @@ class InvalidTest(BaseTest):
             seed = -1
             destroy_ops = [DestroyOperators.Mutation_25]
             repair_ops = [RepairOperators.Repair]
-            selector = None
+            selector = "NOT VALID" # None is OK we default to sth
             accept = HillClimbing()
             stop = MaxIterations(5)
 
@@ -117,7 +117,7 @@ class InvalidTest(BaseTest):
             repair_ops = [RepairOperators.Repair]
             selector = None
             accept = HillClimbing()
-            stop = None
+            stop = "NOT VALID" # None is OK we default to sth
 
             # Solver
             balans = Balans(destroy_ops, repair_ops, selector, accept, stop, seed, mip_solver=BaseTest.mip_solver)
