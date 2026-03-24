@@ -19,20 +19,28 @@ Balans is a collaborative effort between academia and industry, developed by Bro
 # Balans meta-solver for solving mixed-integer programming problems
 from balans.solver import Balans
 
-# Balans
+# Balans with default configuration
 balans = Balans()
-# See also: balans = Balans(config="configs/default.json")
-# See also: main.py for programmatic configuration
-# See also: "balans /path/to/problem.mps" for command-line usage
 
-# Run a mip instance to retrieve results 
-instance_path = "tests/data/noswot.mps"
-result = balans.solve(instance_path)
+# Solve
+result = balans.solve("mip_instance.mps")
 
-# Results of the best found solution and the objective
+# Results
 print("Best solution:", result.best_state.solution())
 print("Best solution objective:", result.best_state.objective())
 ```
+
+To supply a custom JSON configuration file (e.g., [`default.json`](https://github.com/coin-or/balans/blob/main/balans/configs/default.json))
+```python
+balans = Balans(config="/path/to/config.json")
+```
+
+To run directly from the command line after `pip install balans`:
+```bash
+balans mip_instance.mps
+```
+
+To run programmically with a custom configuration, see [`main_balans.py`](https://github.com/coin-or/balans/blob/main/main_balans.py).
 
 ## Quick Start - ParBalans
 ```python
@@ -47,7 +55,7 @@ parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configu
                       output_dir="parbalans/")
 
 # Run a mip instance to retrieve several results 
-instance_path = "tests/data/noswot.mps"
+instance_path = "mip_instance.mps"
 best_solution, best_objective = parbalans.run(instance_path)
 
 # Results of the best found solution and the objective

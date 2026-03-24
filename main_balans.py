@@ -50,11 +50,15 @@ stop = MaxRuntime(600)
 # stop = MaxIterations(10)
 
 # Balans
+# To use the default config shipped with the package:
+#   from balans.utils import ConfigFactory
+#   balans = Balans(config=ConfigFactory.DEFAULT_CONFIG_PATH)
 balans = Balans(destroy_ops=destroy_ops,
                 repair_ops=repair_ops,
                 selector=selector,
                 accept=accept,
-                stop=stop)
+                stop=stop,
+                mip_solver="scip")
 
 # Run
 instance_path = "tests/data/noswot.mps"
@@ -63,7 +67,7 @@ result = balans.solve(instance_path)
 # print("Best solution:", result.best_state.solution())
 print("Best objective:", result.best_state.objective())
 
-# The installed entry point lives in balans/main.py.
-# from balans.main import main
+# The installed CLI entry point lives in balans/main_balans.py.
+# from balans.main_balans import main
 # if __name__ == "__main__":
 #     main()

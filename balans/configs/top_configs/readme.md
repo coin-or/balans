@@ -1,5 +1,5 @@
 # ParBalans Experiments
-In ParBalans (ArXiv'25), we found some configs to work well experimentally on Distributional-MIPLib-Hard and MIPLib-Hard.
+In **ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)), we found some configs to work well experimentally on Distributional-MIPLib-Hard and MIPLib-Hard.
 
 ## 🥇 #1 — Config ID 0 (Best Overall + Most Instance Wins)
 File: overall_r1_miplibhard_r1_18wins_HC_SM_id_000.json
