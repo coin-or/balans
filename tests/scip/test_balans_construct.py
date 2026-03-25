@@ -17,7 +17,7 @@ from tests.test_base import BaseTest
 class BalansConstructScipTest(BaseTest):
     """Tests for Balans constructor (construction) correctness using the SCIP backend."""
 
-    BaseTest.mip_solver = Constants.scip_solver
+    mip_solver = Constants.scip_solver
 
     def test_ijcai25_dmiplib_construction(self):
         """Balans() with no arguments should succeed using default config."""

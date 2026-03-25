@@ -17,7 +17,7 @@ from tests.test_base import BaseTest
 class BalansConstructGurobiTest(BaseTest):
     """Tests for Balans constructor (construction) correctness using the Gurobi backend."""
 
-    BaseTest.mip_solver = Constants.gurobi_solver
+    mip_solver = Constants.gurobi_solver
 
     # ==================================================================
     # 1. Default construction
