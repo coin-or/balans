@@ -4,15 +4,17 @@ from balans.solver import Balans
 
 
 def main():
-    """Console script entry point: balans <instance_path>"""
+    """Console script entry point: balans <instance_path> [config_path]"""
     if len(sys.argv) < 2:
-        print("Usage: balans <instance_path>")
+        print("Usage: balans <instance_path> [path_to_config.json]")
         print("Example: balans problem.mps")
+        print("Example: balans problem.mps config.json")
         sys.exit(1)
 
     instance_path = sys.argv[1]
+    config_path = sys.argv[2] if len(sys.argv) > 2 else None
 
-    balans = Balans()
+    balans = Balans(config=config_path)
     result = balans.solve(instance_path)
 
     # print("Best solution:", result.best_state.solution())

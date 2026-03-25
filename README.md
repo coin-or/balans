@@ -32,15 +32,50 @@ print("Best solution objective:", result.best_state.objective())
 
 To supply a custom JSON configuration file (e.g., [`default.json`](https://github.com/coin-or/balans/blob/main/balans/configs/default.json))
 ```python
+from balans.solver import Balans
 balans = Balans(config="/path/to/config.json")
 ```
 
 To run directly from the command line after `pip install balans`:
 ```bash
-balans mip_instance.mps
+> balans mip_instance.mps
+> balans mip_instance.mps config.json
 ```
 
-To run programmically with a custom configuration, see [`main_balans.py`](https://github.com/coin-or/balans/blob/main/main_balans.py).
+To run programmatically with a custom configuration, see [`main_balans.py`](https://github.com/coin-or/balans/blob/main/main_balans.py).
+
+## How does Balans work?
+Balans is a meta-solver that sits on top of a MIP solver (e.g., SCIP, Gurobi) and iteratively improves the solution to a MIP instance by applying a sequence of destroy and repair operators. The selection of these operators is guided by a multi-armed bandit algorithm that learns which operators are most effective at improving the solution over time.
+
+### Intended Use Cases
+Balans, as a meta-heuristic, _cannot provide optimality guarantees_. Balans is intended for finding good solutions for **extremely challenging instances** that cannot be solved to optimality with MIP solvers or cannot be solved quickly with heuristics to obtain good solutions.
+
+If you have a challenging MIP instance that _cannot be solved to optimality with a MIP solver_, or _does not admit high-quality heuristic solutions in short amount of time_, then Balans is your friend! 🤗 
+
+### 1) Create a Balans solver
+You can create a Balans solver using 
+1. Default configuration as `balans = Balans()`.
+1. JSON configuration file as `balans = Balans(config="/path/to/config.json")`.
+2. Constructor settings as `balans = Balans(destroy_ops, repair_ops, accept, stop, ...)`). 
+ 
+The parameters specify which the destroy and repair operators to consider, the rewards and learning policy for the multi-armed bandit algorithm, the acceptance criteria for neighborhood exploration, the stopping condition, and other settings such as time limits and the mip solver to use.
+
+### 2) Run the Balans solver
+When you run `balans.solve("mip_instance.mps")` Balans reads the MIP instance from the specified path using the built-in reading capability of the underlying MIP solver. Then, it attempts to (1) find an initial solution, and (2), improve it until stop. 
+
+#### Finding an initial solution 
+First, Balans tries to find an initial solution running the mip solver with `timelimit_first_solution` seconds. Notice that this might find more than one solution until hitting the time limit and the best found solution becomes the initial solution. 
+
+You can skip this step by providing an initial solution dictionary to Balans via `balans.solve("mip_instance.mps", index_to_val)`. This sets variable values according to `index_to_val` before starting the search. This can even be _partial_ to guide the MIP solver in its search for the initial solution. 
+
+In case finding an initial solution fails, Balans will restart the MIP solver to find a _single feasible solution_ within the remaining the time limit. If that also fails within the timelimit, Balans will terminate without any solution. 😢
+
+#### Improving the solution
+After obtaining an initial solution, Balans will enter the main ALSN search loop and iteratively apply destroy and repair operators to improve the solution. The multi-armed bandit algorithm will update its beliefs about which operators are most effective based on the observed improvements in the solution. 
+
+This loop runs until the specified stop condition is met (e.g., maximum number of iterations, time limit, or no improvement). 
+
+The runtime for each ALNS iteration is limited by `timelimit_alns_iteration` seconds, except for local branching operator, which is a costlier operator than others, is limited by `timelimit_local_branching_iteration` seconds. The crossover operator requires finding a random solution to crossover with the current solution, and this is limited by `timelimit_crossover_random_feasible` seconds. The proximity operator, which alters the original objective function, uses `big_m` to avoid infeasibility. 
 
 ## Quick Start - ParBalans
 ```python

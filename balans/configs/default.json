@@ -1,4 +1,6 @@
 {
+  "mip_solver": "scip",
+  "n_mip_jobs": 1,
   "seed": 1283,
 
   "destroy_operators": [
@@ -36,11 +38,9 @@
     "max_runtime": 300
   },
 
-  "constants": {
-    "timelimit_first_solution": 20,
-    "timelimit_crossover_random_feasible": 20,
-    "timelimit_alns_iteration": 60,
-    "timelimit_local_branching_iteration": 150,
-    "M": 1000
-  }
+  "timelimit_first_solution": 20,
+  "timelimit_crossover_random_feasible": 20,
+  "timelimit_alns_iteration": 60,
+  "timelimit_local_branching_iteration": 150,
+  "M": 1000
 }

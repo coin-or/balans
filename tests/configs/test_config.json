@@ -31,9 +31,7 @@
     "max_iterations": 1
   },
 
-  "constants": {
-    "timelimit_first_solution": 10,
-    "timelimit_alns_iteration": 30
-  }
+  "timelimit_first_solution": 10,
+  "timelimit_alns_iteration": 30
 }
 

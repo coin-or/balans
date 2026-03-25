@@ -39,7 +39,8 @@ from balans.destroy.rens import rens_05, rens_10, rens_15, rens_20, rens_25, ren
 from balans.destroy.rins import rins_05, rins_10, rins_15, rins_20, rins_25, rins_30, rins_35, rins_40, rins_45, \
     rins_50, rins_55, rins_60, rins_65, rins_70, rins_75, rins_80, rins_85, rins_90, rins_95
 from balans.repair.repair import repair
-from balans.utils import Constants, ConfigFactory, check_false, check_true, create_rng, set_solve_start_time, timestamp, update_constants
+from balans.utils import Constants, ConfigFactory, check_false, check_true, create_rng, set_solve_start_time, \
+    set_solve_deadline, timestamp
 
 
 class DestroyOperators(NamedTuple):
@@ -293,14 +294,13 @@ _REPAIR_OP_MAP = {name: getattr(RepairOperators, name)
                   and callable(getattr(RepairOperators, name))}
 
 
-
 class Balans:
     """
     High-Level Architecture:
 
     From the input MIP file, an Instance() is created.
     The Instance() provides:
-        - Seed
+        - Seed and timelimit parameters
         - MIP model
         - LP solution and objective
         - Indices for binary, discrete variables
@@ -332,53 +332,93 @@ class Balans:
                  seed: int = None,
                  n_mip_jobs: int = None,
                  mip_solver: str = None,
+                 timelimit_first_solution: float = None,
+                 timelimit_alns_iteration: float = None,
+                 timelimit_local_branching_iteration: float = None,
+                 timelimit_crossover_random_feasible: float = None,
+                 big_m: float = None,
                  *,
                  config: str = None,
                  ):
 
         # ------------------------------------------------------------------
-        # Resolve configuration: config file -> explicit overrides
+        # Resolve configuration: constructor kwarg > config file > hardcoded default
         # ------------------------------------------------------------------
-        # Always load a base config (explicit file or default.json).
-        # Then override with any explicitly provided parameters.
         config_path = config if config is not None else ConfigFactory.DEFAULT_CONFIG_PATH
-        cfg = ConfigFactory.load(config_path)
+        cfg = ConfigFactory.load(config_path)  # raw JSON dict, no defaults applied
 
-        # Apply constants overrides from the config file
-        if cfg.get('constants'):
-            update_constants(**cfg['constants'])
-
-        # Resolve each parameter: explicit arg wins over config value
-        if destroy_ops is None:
-            destroy_ops = ConfigFactory.resolve_operators(
-                cfg['destroy_operator_names'], _DESTROY_OP_MAP, kind="destroy operator")
-        if repair_ops is None:
-            repair_ops = ConfigFactory.resolve_operators(
-                cfg['repair_operator_names'], _REPAIR_OP_MAP, kind="repair operator")
-        if accept is None:
-            accept = cfg['accept']
-        if stop is None:
-            stop = cfg['stop']
+        # --- Scalars: kwarg > cfg value > Constants default ---
         if seed is None:
-            seed = cfg['seed']
+            seed = cfg.get('seed', Constants.default_seed)
         if n_mip_jobs is None:
-            n_mip_jobs = cfg['n_mip_jobs']
+            n_mip_jobs = cfg.get('n_mip_jobs', Constants.default_n_mip_jobs)
         if mip_solver is None:
-            mip_solver = cfg['mip_solver']
+            mip_solver = cfg.get('mip_solver', Constants.default_solver)
+        if timelimit_first_solution is None:
+            timelimit_first_solution = cfg.get('timelimit_first_solution', Constants.timelimit_first_solution)
+        if timelimit_alns_iteration is None:
+            timelimit_alns_iteration = cfg.get('timelimit_alns_iteration', Constants.timelimit_alns_iteration)
+        if timelimit_local_branching_iteration is None:
+            timelimit_local_branching_iteration = cfg.get('timelimit_local_branching_iteration',
+                                                          Constants.timelimit_local_branching_iteration)
+        if timelimit_crossover_random_feasible is None:
+            timelimit_crossover_random_feasible = cfg.get('timelimit_crossover_random_feasible',
+                                                          Constants.timelimit_crossover_random_feasible)
+        if big_m is None:
+            big_m = cfg.get('M', Constants.M)
 
-        # Selector: build from config if not explicitly provided
-        if selector is None:
-            sel_cfg = cfg.get('selector_config')
-            if sel_cfg is not None:
-                selector = ConfigFactory.build_selector(sel_cfg, len(destroy_ops), len(repair_ops))
+        # --- Complex types: kwarg > build from cfg > hardcoded default (matching default.json) ---
+        # Destroy operators
+        if destroy_ops is None:
+            if 'destroy_operators' in cfg:
+                destroy_ops = ConfigFactory.resolve_operators(cfg['destroy_operators'],
+                                                              _DESTROY_OP_MAP, kind="destroy operator")
             else:
-                # Fallback: default MABSelector
-                selector = MABSelector(scores=[1, 1, 0, 0],
+                destroy_ops = [crossover,
+                               mutation_50,
+                               rins_40,
+                               rens_40, rens_50,
+                               proximity_005,
+                               local_branching_10, local_branching_20,
+                               local_branching_30, local_branching_50]
+
+        # Repair operators
+        if repair_ops is None:
+            if 'repair_operators' in cfg:
+                repair_ops = ConfigFactory.resolve_operators(cfg['repair_operators'],
+                                                             _REPAIR_OP_MAP, kind="repair operator")
+            else:
+                repair_ops = [repair]
+
+        # Acceptance criterion
+        if accept is None:
+            if 'acceptance' in cfg:
+                accept = ConfigFactory.build_acceptance(cfg['acceptance'])
+            else:
+                accept = HillClimbing()
+
+        # Stopping criterion
+        if stop is None:
+            if 'stop' in cfg:
+                stop = ConfigFactory.build_stop(cfg['stop'])
+            else:
+                stop = MaxRuntime(300)
+
+        # Selector
+        if selector is None:
+            if 'selector' in cfg:
+                selector = ConfigFactory.build_selector(cfg['selector'], len(destroy_ops), len(repair_ops))
+            else:
+                selector = MABSelector(scores=[8, 4, 2, 1],
                                        num_destroy=len(destroy_ops),
                                        num_repair=len(repair_ops),
-                                       learning_policy=LearningPolicy.ThompsonSampling())
+                                       learning_policy=LearningPolicy.Softmax(tau=1.359686))
 
-        self._validate_balans_args(destroy_ops, repair_ops, selector, accept, stop, seed, n_mip_jobs, mip_solver)
+        self._validate_balans_args(destroy_ops, repair_ops, selector, accept, stop,
+                                   seed, n_mip_jobs, mip_solver,
+                                   timelimit_first_solution,
+                                   timelimit_alns_iteration,
+                                   timelimit_crossover_random_feasible)
 
         # Parameters
         self.destroy_ops = destroy_ops
@@ -389,14 +429,17 @@ class Balans:
         self.seed = seed
         self.n_mip_jobs = n_mip_jobs
         self.mip_solver_str = mip_solver
+        self.timelimit_first_solution = timelimit_first_solution
+        self.timelimit_alns_iteration = timelimit_alns_iteration
+        self.timelimit_local_branching_iteration = timelimit_local_branching_iteration
+        self.timelimit_crossover_random_feasible = timelimit_crossover_random_feasible
+        self.big_m = big_m
 
         # RNG
         self._rng = create_rng(self.seed)
         self.alns_seed = self._rng.randint(0, self.seed)
 
         # ALNS
-        self.destroy_ops = destroy_ops
-        self.repair_ops = repair_ops
         self.alns = None
 
         # Instance and the first solution
@@ -433,21 +476,32 @@ class Balans:
         # Start timing
         set_solve_start_time()
 
+        # Set global wall-clock deadline so every MIP call respects the budget
+        if isinstance(self.stop, MaxRuntime):
+            set_solve_deadline(self.stop.max_runtime)
+        else:
+            set_solve_deadline(None)
+
         # Print configuration
         print(self)
         print(f"{timestamp()} Solving instance: {instance_path}")
 
-        # MIP is an instance of _BaseMIP created from given mip instance
-        mip = create_mip_solver(instance_path, self.seed, self.n_mip_jobs, self.mip_solver_str)
+        # MIP is an instance of _BaseMIP created from given mip instance.
+        # big_m is passed directly so Constants.M is never globally mutated.
+        mip = create_mip_solver(instance_path, self.seed, self.n_mip_jobs, self.mip_solver_str,
+                                big_m=self.big_m)
 
-        # Create instance with mip model created from mip instance
-        self._instance = _Instance(mip, self.seed)
+        # Create instance with timelimits set from this Balans configuration.
+        self._instance = _Instance(mip, self.seed,
+                                   timelimit_first_solution=self.timelimit_first_solution,
+                                   timelimit_alns_iteration=self.timelimit_alns_iteration,
+                                   timelimit_local_branching_iteration=self.timelimit_local_branching_iteration,
+                                   timelimit_crossover_random_feasible=self.timelimit_crossover_random_feasible)
 
         print(f"{timestamp()} Finding initial solution...")
         self._initial_index_to_val, self._initial_obj_val = self._instance.initial_solve(index_to_val=index_to_val)
 
         print(f"{timestamp()} >>> START objective: {self._initial_obj_val}")
-        # print(">>> START values:", self._initial_index_to_val)
 
         # Initial state and solution
         initial_state = _State(self.instance, self.initial_index_to_val, self.initial_obj_val,
@@ -473,7 +527,6 @@ class Balans:
         else:
             result = None
 
-        # Result run
         return result
 
     @staticmethod
@@ -563,7 +616,11 @@ class Balans:
         return True
 
     @staticmethod
-    def _validate_balans_args(destroy_ops, repair_ops, selector, accept, stop, seed, n_mip_jobs, mip_solver):
+    def _validate_balans_args(destroy_ops, repair_ops, selector, accept, stop,
+                              seed, n_mip_jobs, mip_solver,
+                              timelimit_first_solution,
+                              timelimit_alns_iteration,
+                              timelimit_crossover_random_feasible):
 
         # Destroy Type
         for op in destroy_ops:
@@ -595,6 +652,20 @@ class Balans:
         check_true(mip_solver in ["scip", "gurobi"],
                    ValueError("MIP solver backend must be a scip or gurobi." + str(mip_solver)))
 
+        # Timelimit consistency
+        if isinstance(stop, MaxRuntime):
+            if stop.max_runtime < timelimit_first_solution:
+                raise ValueError(
+                    f"MaxRuntime ({stop.max_runtime}s) must be >= "
+                    f"timelimit_first_solution ({timelimit_first_solution}s). "
+                    f"The initial solution search alone needs {timelimit_first_solution}s.")
+
+        if timelimit_alns_iteration < timelimit_crossover_random_feasible:
+            raise ValueError(
+                f"timelimit_alns_iteration ({timelimit_alns_iteration}s) must be >= "
+                f"timelimit_crossover_random_feasible ({timelimit_crossover_random_feasible}s). "
+                f"The crossover destroy runs inside an ALNS iteration.")
+
     @staticmethod
     def _validate_solve_args(instance_path):
 
@@ -611,6 +682,7 @@ class Balans:
             separator,
             f"  MIP Solver          : {self.mip_solver_str}",
             f"  Seed                : {self.seed}",
+            f"  ALNS Seed           : {self.alns_seed}",
             f"  MIP Jobs            : {self.n_mip_jobs}",
             "",
             f"  {len(self.destroy_ops)} Destroy Operators  :",
@@ -655,10 +727,12 @@ class Balans:
         lines.append("")
 
         lines.append("  ALNS Time Limits:")
-        lines.append(f"    First Solution    : {Constants.timelimit_first_solution}s")
-        lines.append(f"    ALNS Iteration    : {Constants.timelimit_alns_iteration}s")
-        lines.append(f"    Local Branching   : {Constants.timelimit_local_branching_iteration}s")
-        lines.append(f"    Crossover Random Feasible   : {Constants.timelimit_crossover_random_feasible}s")
+        lines.append(f"    First Solution              : {self.timelimit_first_solution}s")
+        lines.append(f"    ALNS Iteration              : {self.timelimit_alns_iteration}s")
+        lines.append(f"    Local Branching Iteration   : {self.timelimit_local_branching_iteration}s")
+        lines.append(f"    Crossover Random Feasible   : {self.timelimit_crossover_random_feasible}s")
+        lines.append("")
+        lines.append(f"  Big-M               : {self.big_m}")
         lines.append(separator)
         return "\n".join(lines)
 
@@ -670,9 +744,9 @@ class ParBalans:
 
     def __init__(self,
                  n_jobs: int = 1,
-                 n_mip_jobs: int = 1,
+                 n_mip_jobs: int = Constants.default_n_mip_jobs,
                  mip_solver: str = Constants.default_solver,
-                 output_dir: str = "results/",
+                 output_dir: str = Constants.default_parbalans_output_dir,
                  balans_generator=None):
         """
         ParBalans runs several Balans configurations in parallel.
@@ -757,7 +831,7 @@ class ParBalans:
         return result.best_state.solution(), result.best_state.objective()
 
     @staticmethod
-    def _generate_random_balans(n_mip_jobs: int = 1, mip_solver: str = Constants.default_solver) -> Balans:
+    def _generate_random_balans(n_mip_jobs: int = Constants.default_n_mip_jobs, mip_solver: str = Constants.default_solver) -> Balans:
 
         # Pool of options
         DESTROY_CATEGORIES = {"crossover": [DestroyOperators.Crossover],
@@ -842,7 +916,7 @@ class ParBalans:
         chosen_seed = random.randint(1, 100000)
 
         # Stop
-        stop = MaxIterations(10) # MaxRuntime(100)
+        stop = MaxIterations(10)  # MaxRuntime(100)
 
         # Balans
         balans = Balans(destroy_ops=chosen_destroy_ops,

@@ -56,9 +56,9 @@ class BalansConstructGurobiTest(BaseTest):
         self.assertIsInstance(b.accept, HillClimbing)
 
     def test_default_stop_type(self):
-        """Default stop should be MaxIterations."""
+        """Default stop should be MaxRuntime (as defined in default.json)."""
         b = Balans()
-        self.assertIsInstance(b.stop, MaxIterations)
+        self.assertIsInstance(b.stop, MaxRuntime)
 
     # ==================================================================
     # 2. Explicit positional construction (backward compatibility)
@@ -624,7 +624,7 @@ class BalansConstructGurobiTest(BaseTest):
         self.assertIsInstance(b.stop, NoImprovement)
 
     def test_config_constants_override(self):
-        """Config constants overrides should apply to Constants class."""
+        """Timelimit/M overrides in config.json should be stored on the instance, not in global Constants."""
         cfg = {
             "mip_solver": "gurobi",
             "destroy_operators": ["Crossover"],
@@ -632,11 +632,10 @@ class BalansConstructGurobiTest(BaseTest):
             "selector": {"type": "RandomSelect"},
             "acceptance": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1},
-            "constants": {
-                "timelimit_first_solution": 5,
-                "timelimit_alns_iteration": 15,
-                "M": 2000
-            }
+            "timelimit_first_solution": 5,
+            "timelimit_alns_iteration": 15,
+            "timelimit_crossover_random_feasible": 10,
+            "M": 2000
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             json.dump(cfg, f)
@@ -644,9 +643,17 @@ class BalansConstructGurobiTest(BaseTest):
             b = Balans(config=f.name)
         os.unlink(f.name)
 
-        self.assertEqual(Constants.timelimit_first_solution, 5)
-        self.assertEqual(Constants.timelimit_alns_iteration, 15)
-        self.assertEqual(Constants.M, 2000)
+        # Effective values are stored as public instance attrs
+        self.assertEqual(b.timelimit_first_solution, 5)
+        self.assertEqual(b.timelimit_alns_iteration, 15)
+        self.assertEqual(b.timelimit_crossover_random_feasible, 10)
+        self.assertEqual(b.big_m, 2000)
+
+        # The global Constants class must NOT be permanently mutated (Issue 5 fix)
+        self.assertEqual(Constants.timelimit_first_solution, 20)
+        self.assertEqual(Constants.timelimit_alns_iteration, 60)
+        self.assertEqual(Constants.timelimit_crossover_random_feasible, 20)
+        self.assertEqual(Constants.M, 1000)
 
     def test_config_learning_policy_epsilon_greedy(self):
         """Config with EpsilonGreedy learning policy should build correctly."""
@@ -731,21 +738,25 @@ class BalansConstructGurobiTest(BaseTest):
     def test_config_factory_load_keys(self):
         """ConfigFactory.load should return all expected keys."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertIn('destroy_operator_names', cfg)
-        self.assertIn('repair_operator_names', cfg)
-        self.assertIn('selector_config', cfg)
-        self.assertIn('accept', cfg)
+        self.assertIn('destroy_operators', cfg)
+        self.assertIn('repair_operators', cfg)
+        self.assertIn('selector', cfg)
+        self.assertIn('acceptance', cfg)
         self.assertIn('stop', cfg)
         self.assertIn('seed', cfg)
         self.assertIn('n_mip_jobs', cfg)
         self.assertIn('mip_solver', cfg)
-        self.assertIn('constants', cfg)
+        self.assertIn('timelimit_first_solution', cfg)
+        self.assertIn('timelimit_alns_iteration', cfg)
+        self.assertIn('timelimit_local_branching_iteration', cfg)
+        self.assertIn('timelimit_crossover_random_feasible', cfg)
+        self.assertIn('M', cfg)
 
     def test_config_factory_load_operator_count(self):
         """Default config should have 16 destroy operators and 1 repair operator."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertEqual(len(cfg['destroy_operator_names']), 10)
-        self.assertEqual(len(cfg['repair_operator_names']), 1)
+        self.assertEqual(len(cfg['destroy_operators']), 10)
+        self.assertEqual(len(cfg['repair_operators']), 1)
 
     def test_config_factory_build_learning_policy_thompson(self):
         """build_learning_policy should produce ThompsonSampling."""
@@ -987,7 +998,7 @@ class BalansConstructGurobiTest(BaseTest):
             "repair_operators": ["Repair"],
             "acceptance": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1},
-            "constants": {"nonexistent_constant": 999}
+            "nonexistent_constant": 999
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             json.dump(bad_config, f)

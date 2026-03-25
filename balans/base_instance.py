@@ -1,7 +1,7 @@
 from typing import Tuple, Dict, Any
 
 from balans.base_mip import _BaseMIP
-from balans.utils import Constants, timestamp
+from balans.utils import Constants, timestamp, cap_timelimit, remaining_time
 
 
 class _Instance:
@@ -9,10 +9,20 @@ class _Instance:
     Instance from a given MIP file with solve operations on top, subject to operator
     """
 
-    def __init__(self, mip: _BaseMIP, seed=Constants.default_seed):
+    def __init__(self, mip: _BaseMIP, seed=Constants.default_seed,
+                 timelimit_first_solution=Constants.timelimit_first_solution,
+                 timelimit_alns_iteration=Constants.timelimit_alns_iteration,
+                 timelimit_local_branching_iteration=Constants.timelimit_local_branching_iteration,
+                 timelimit_crossover_random_feasible=Constants.timelimit_crossover_random_feasible):
         # MIP Model initialized from the original mip instance
         self.mip: _BaseMIP = mip
         self.seed = seed
+
+        # Effective timelimits for this instance (set by Balans, default to Constants)
+        self.timelimit_first_solution = timelimit_first_solution
+        self.timelimit_alns_iteration = timelimit_alns_iteration
+        self.timelimit_local_branching_iteration = timelimit_local_branching_iteration
+        self.timelimit_crossover_random_feasible = timelimit_crossover_random_feasible
 
         # Static, set once and for all
         self.discrete_indexes = None    # all discrete: binary + integer
@@ -34,12 +44,16 @@ class _Instance:
         self.mip.fix_vars(index_to_val)
 
         # Solve with some time limit to get an initial solution
-        index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=Constants.timelimit_first_solution)
+        index_to_val, obj_val = self.mip.solve_and_undo(
+            time_limit_in_sc=cap_timelimit(self.timelimit_first_solution))
 
         # If no feasible initial solution found within time limit
         if len(index_to_val) == 0:
-            # Solve for the first feasible solution without time limit and without fixing the given solution
-            index_to_val, obj_val = self.mip.solve_and_undo(solution_limit=1)
+            # Solve for the first feasible solution within the remaining budget (solution_limit=1)
+            remaining = remaining_time()
+            if remaining > 0:
+                index_to_val, obj_val = self.mip.solve_and_undo(
+                    time_limit_in_sc=remaining, solution_limit=1)
 
         # Return solution
         return index_to_val, obj_val
@@ -107,11 +121,11 @@ class _Instance:
             # print("\t starting_index_to_val: ", starting_index_to_val)
             return starting_index_to_val, starting_obj_val
 
-        # Solve mip and undo with some timelimit
-        # Set time limit per alns iteration or overwrite with local branching iteration
-        time_limit = Constants.timelimit_alns_iteration
+        # Use instance timelimits (set by Balans from config/kwargs/Constants defaults)
+        time_limit = self.timelimit_alns_iteration
         if local_branching_size:
-            time_limit = Constants.timelimit_local_branching_iteration
+            time_limit = self.timelimit_local_branching_iteration
+        time_limit = cap_timelimit(time_limit)
         index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=time_limit)
 
         # If no solution found, go back

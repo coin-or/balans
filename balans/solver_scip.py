@@ -11,8 +11,8 @@ from balans.utils import Constants
 
 class _SCIP(_BaseMIP):
 
-    def __init__(self, instance_path: str, n_mip_jobs: int, seed: int):
-        super().__init__(seed)
+    def __init__(self, instance_path: str, n_mip_jobs: int, seed: int, big_m: float = Constants.M):
+        super().__init__(seed, big_m)
 
         # Set Scip model, variables and objective
         self.model = scip.Model()
@@ -126,7 +126,7 @@ class _SCIP(_BaseMIP):
                                                    obj_val * (1 - proximity_delta) + self.proximity_z))
 
         # M * z is to make sure model does not use z, unless needed to avoid infeasibility
-        self.model.setObjective(zero_expr + one_expr + Constants.M * self.proximity_z, Constants.minimize)
+        self.model.setObjective(zero_expr + one_expr + self.big_m * self.proximity_z, Constants.minimize)
 
     def rens(self, index_to_val, rens_float_set, lp_index_to_val) -> None:
         for var in self.variables:

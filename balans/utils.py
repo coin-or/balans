@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import mabwiser.utils
 from alns.accept import (LateAcceptanceHillClimbing, NonLinearGreatDeluge, AlwaysAccept,
@@ -19,6 +19,9 @@ class Constants(NamedTuple):
 
     # Default seed
     default_seed = 1283
+
+    # Default number of parallel MIP jobs
+    default_n_mip_jobs = 1
 
     # Default MIP Solver
     scip_solver = "scip"
@@ -56,6 +59,9 @@ class Constants(NamedTuple):
     # for Big-M constraint, currently used in Proximity
     M = 1000
 
+    # Default output directory for ParBalans results
+    default_parbalans_output_dir = "parbalans_results/"
+
     # Folder names
     _TEST_DIR_NAME = "tests"
     _DATA_DIR_NAME = "data"
@@ -73,6 +79,9 @@ class Constants(NamedTuple):
 # Global start time for elapsed time tracking, set when Balans.solve() is called
 _solve_start_time: float = 0.0
 
+# Global wall-clock deadline (absolute time). None means no deadline.
+_solve_deadline: Optional[float] = None
+
 
 def set_solve_start_time():
     """Set the global solve start time to now."""
@@ -80,19 +89,43 @@ def set_solve_start_time():
     _solve_start_time = time.time()
 
 
+def set_solve_deadline(max_runtime: float = None):
+    """Set a global wall-clock deadline for the entire Balans.solve() call.
+
+    Parameters
+    ----------
+    max_runtime : float or None
+        If given, the deadline is set to now + max_runtime seconds.
+        If None, no deadline is enforced.
+    """
+    global _solve_deadline
+    if max_runtime is not None:
+        _solve_deadline = time.time() + max_runtime
+    else:
+        _solve_deadline = None
+
+
+def remaining_time() -> float:
+    """Return seconds remaining until the global deadline.
+
+    Returns float('inf') if no deadline has been set.
+    """
+    if _solve_deadline is None:
+        return float('inf')
+    return max(0.0, _solve_deadline - time.time())
+
+
+def cap_timelimit(requested: float) -> float:
+    """Return min(requested, remaining_time()), ensuring the MIP solver
+    never exceeds the global wall-clock budget."""
+    return min(requested, remaining_time())
+
+
 def timestamp() -> str:
     """Return a formatted string showing elapsed time since solve started."""
     elapsed = time.time() - _solve_start_time
     return f"[{elapsed:8.2f}s]"
 
-
-def update_constants(**kwargs):
-    """Override Constants class attributes with values from a config file."""
-    for key, value in kwargs.items():
-        if hasattr(Constants, key):
-            setattr(Constants, key, value)
-        else:
-            raise ValueError(f"Unknown constant: {key}")
 
 
 def create_rng(seed):
@@ -113,9 +146,9 @@ def check_true(expression: bool, exception: Exception):
 class ConfigFactory:
     """Factory for building Balans configuration from JSON config files.
 
-    Handles parsing JSON configs, building ALNS selector / acceptance / stop
-    objects, and resolving operator names. Operator name-to-function resolution
-    requires an operator map that lives in solver.py (to avoid circular imports).
+    Handles parsing JSON configs,
+    building ALNS selector / acceptance / stop objects, and resolving operator names.
+    Operator name-to-function resolution requires an operator map that lives in solver.py (to avoid circular imports).
     """
 
     # Default config file shipped with the package (lives inside balans/configs/)
@@ -130,13 +163,13 @@ class ConfigFactory:
         if lp_type == "ThompsonSampling":
             return LearningPolicy.ThompsonSampling()
         elif lp_type == "EpsilonGreedy":
-            return LearningPolicy.EpsilonGreedy(epsilon=lp_config.get("epsilon", 0.1))
+            return LearningPolicy.EpsilonGreedy(epsilon=lp_config.get("epsilon"))
         elif lp_type == "Softmax":
-            return LearningPolicy.Softmax(tau=lp_config.get("tau", 1.0))
+            return LearningPolicy.Softmax(tau=lp_config.get("tau"))
         elif lp_type == "UCB1":
-            return LearningPolicy.UCB1(alpha=lp_config.get("alpha", 1.0))
+            return LearningPolicy.UCB1(alpha=lp_config.get("alpha"))
         else:
-            raise ValueError(f"Unknown learning policy type: {lp_type}")
+            raise ValueError(f"Unknown learning policy type in config.json: {lp_type}")
 
     # ----- Selector -----
     @staticmethod
@@ -153,16 +186,16 @@ class ConfigFactory:
             return RouletteWheel(scores=sel_config["scores"],
                                  num_destroy=num_destroy,
                                  num_repair=num_repair,
-                                 decay=sel_config.get("decay", 0.5))
+                                 decay=sel_config.get("decay"))
         elif sel_type == "RandomSelect":
             return RandomSelect(num_destroy=num_destroy, num_repair=num_repair)
         elif sel_type == "AlphaUCB":
             return AlphaUCB(scores=sel_config["scores"],
                             num_destroy=num_destroy,
                             num_repair=num_repair,
-                            alpha=sel_config.get("alpha", 1.0))
+                            alpha=sel_config.get("alpha"))
         else:
-            raise ValueError(f"Unknown selector type: {sel_type}")
+            raise ValueError(f"Unknown selector type config.json: {sel_type}")
 
     # ----- Acceptance -----
     @staticmethod
@@ -194,7 +227,7 @@ class ConfigFactory:
         elif acc_type == "AlwaysAccept":
             return AlwaysAccept()
         else:
-            raise ValueError(f"Unknown acceptance type: {acc_type}")
+            raise ValueError(f"Unknown acceptance type config.json: {acc_type}")
 
     # ----- Stop -----
     @staticmethod
@@ -202,13 +235,13 @@ class ConfigFactory:
         """Build an ALNS stopping criterion from a config dict."""
         stop_type = stop_config["type"]
         if stop_type == "MaxIterations":
-            return MaxIterations(stop_config.get("max_iterations", 10))
+            return MaxIterations(stop_config.get("max_iterations"))
         elif stop_type == "MaxRuntime":
-            return MaxRuntime(stop_config.get("max_runtime", 100))
+            return MaxRuntime(stop_config.get("max_runtime"))
         elif stop_type == "NoImprovement":
-            return NoImprovement(stop_config.get("max_iterations", 100))
+            return NoImprovement(stop_config.get("max_iterations"))
         else:
-            raise ValueError(f"Unknown stop type: {stop_type}")
+            raise ValueError(f"Unknown stop type config.json: {stop_type}")
 
     # ----- Operator resolution -----
     @staticmethod
@@ -223,52 +256,46 @@ class ConfigFactory:
         return resolved
 
     # ----- Load -----
+
+    # All top-level keys that Balans.__init__ can consume from a config file.
+    # Mirrors the constructor parameters; M maps to big_m.
+    KNOWN_CONFIG_KEYS = frozenset({
+        'seed',
+        'n_mip_jobs',
+        'mip_solver',
+        'destroy_operators',
+        'repair_operators',
+        'selector',
+        'acceptance',
+        'stop',
+        'timelimit_first_solution',
+        'timelimit_alns_iteration',
+        'timelimit_local_branching_iteration',
+        'timelimit_crossover_random_feasible',
+        'M',
+    })
+
     @staticmethod
     def load(config_path: str) -> dict:
-        """Load a Balans JSON config file and return a configuration dict.
+        """Load a Balans JSON config file and return its contents as-is.
 
-        The returned dict has keys:
-            destroy_operator_names, repair_operator_names  (lists of strings)
-            selector_config   (raw dict, not yet built — depends on num_destroy/num_repair)
-            accept            (built AcceptType object)
-            stop              (built StopType object)
-            seed, n_mip_jobs, mip_solver   (scalars)
-            constants         (dict or None)
+        Returns the raw JSON dict. Keys present in the file are returned with
+        their values; keys absent from the file are simply not in the dict.
+        No defaults are applied here — all fallback logic lives in Balans.__init__.
 
-        Operator names are left as strings. Use resolve_operators() with the
-        appropriate operator map (defined in solver.py) to convert them to
-        function references.
+        Raises
+        ------
+        ValueError
+            If the config file contains any unrecognised top-level key.
         """
         with open(config_path, 'r') as f:
             cfg = json.load(f)
 
-        result = {}
+        unknown = set(cfg.keys()) - ConfigFactory.KNOWN_CONFIG_KEYS
+        if unknown:
+            raise ValueError(
+                f"Unknown config key(s): {sorted(unknown)}. "
+                f"Known keys: {sorted(ConfigFactory.KNOWN_CONFIG_KEYS)}")
 
-        # Simple scalar params
-        result['seed'] = cfg.get('seed', Constants.default_seed)
-        result['n_mip_jobs'] = cfg.get('n_mip_jobs', 1)
-        result['mip_solver'] = cfg.get('mip_solver', Constants.default_solver)
-
-        # Operators: keep as string names (resolved later with operator maps)
-        result['destroy_operator_names'] = cfg.get('destroy_operators', [])
-        result['repair_operator_names'] = cfg.get('repair_operators', ['Repair'])
-
-        # Selector: keep raw config dict (built later with correct num_destroy/num_repair)
-        result['selector_config'] = cfg.get('selector', None)
-
-        # Acceptance: build object
-        acc_cfg = cfg.get('acceptance', {"type": "SimulatedAnnealing",
-                                         "start_temperature": 20,
-                                         "end_temperature": 1,
-                                         "step": 0.1})
-        result['accept'] = ConfigFactory.build_acceptance(acc_cfg)
-
-        # Stop: build object
-        stop_cfg = cfg.get('stop', {"type": "MaxIterations", "max_iterations": 10})
-        result['stop'] = ConfigFactory.build_stop(stop_cfg)
-
-        # Constants overrides
-        result['constants'] = cfg.get('constants', None)
-
-        return result
+        return cfg
 

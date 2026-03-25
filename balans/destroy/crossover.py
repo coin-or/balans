@@ -2,7 +2,7 @@ import copy
 import math
 
 from balans.base_state import _State
-from balans.utils import Constants, timestamp
+from balans.utils import timestamp, cap_timelimit
 
 
 def crossover(current: _State, rnd_state) -> _State:
@@ -18,7 +18,8 @@ def crossover(current: _State, rnd_state) -> _State:
     # Static features from the instance
     discrete_indexes = current.instance.discrete_indexes
 
-    r1_index_to_val, _ = current.instance.mip.solve_random_and_undo(Constants.timelimit_crossover_random_feasible)
+    r1_index_to_val, _ = current.instance.mip.solve_random_and_undo(
+        cap_timelimit(current.instance.timelimit_crossover_random_feasible))
 
     # If we don't find a random feasible solution
     if len(r1_index_to_val) == 0:
