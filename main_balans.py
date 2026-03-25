@@ -46,8 +46,8 @@ selector = MABSelector(scores=[reward_best, reward_better, reward_accept, reward
 accept = SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1)
 
 # Stopping condition
-stop = MaxRuntime(10)
-# stop = MaxIterations(10)
+# stop = MaxRuntime(300)
+stop = MaxIterations(10)
 
 # Balans
 # To use the default config shipped with the package:
