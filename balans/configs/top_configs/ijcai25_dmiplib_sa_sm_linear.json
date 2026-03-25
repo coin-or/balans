@@ -44,13 +44,13 @@
   },
 
   "stop": {
-    "type": "MaxIterations",
-    "max_iterations": 10
+    "type": "MaxRuntime",
+    "max_runtime": 3600
   },
 
   "constants": {
     "timelimit_first_solution": 20,
-    "timelimit_random_feasible": 20,
+    "timelimit_crossover_random_feasible": 20,
     "timelimit_alns_iteration": 60,
     "timelimit_local_branching_iteration": 150,
     "M": 1000

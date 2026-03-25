@@ -1,5 +1,6 @@
 {
   "seed": 1283,
+
   "destroy_operators": [
     "Crossover",
     "Mutation_50",
@@ -12,9 +13,11 @@
     "Local_Branching_30",
     "Local_Branching_50"
   ],
+
   "repair_operators": [
     "Repair"
   ],
+
   "selector": {
     "type": "MABSelector",
     "scores": [8, 4, 2, 1],
@@ -23,7 +26,21 @@
       "tau": 1.359686
     }
   },
+
   "acceptance": {
     "type": "HillClimbing"
+  },
+
+  "stop": {
+    "type": "MaxRuntime",
+    "max_runtime": 300
+  },
+
+  "constants": {
+    "timelimit_first_solution": 20,
+    "timelimit_crossover_random_feasible": 20,
+    "timelimit_alns_iteration": 60,
+    "timelimit_local_branching_iteration": 150,
+    "M": 1000
   }
 }

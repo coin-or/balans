@@ -46,7 +46,7 @@ selector = MABSelector(scores=[reward_best, reward_better, reward_accept, reward
 accept = SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1)
 
 # Stopping condition
-stop = MaxRuntime(600)
+stop = MaxRuntime(10)
 # stop = MaxIterations(10)
 
 # Balans
@@ -67,7 +67,7 @@ result = balans.solve(instance_path)
 # print("Best solution:", result.best_state.solution())
 print("Best objective:", result.best_state.objective())
 
-# The installed CLI entry point lives in balans/main_balans.py.
+# The installed CLI entry point lives in balans/main.py.
 # from balans.main_balans import main
 # if __name__ == "__main__":
 #     main()

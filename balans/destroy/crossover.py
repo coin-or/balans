@@ -6,7 +6,7 @@ from balans.utils import Constants, timestamp
 
 
 def crossover(current: _State, rnd_state) -> _State:
-    #  Take one RANDOM solutions.
+    #  Take one RANDOM solution.
     #  If a DISCRETE variable x_rand = x_inc, do not change it.
     #  Otherwise, put it to the destroy set.
     #  Send the destroy set to base_instance.
@@ -18,7 +18,7 @@ def crossover(current: _State, rnd_state) -> _State:
     # Static features from the instance
     discrete_indexes = current.instance.discrete_indexes
 
-    r1_index_to_val, _ = current.instance.mip.solve_random_and_undo(Constants.timelimit_random_feasible)
+    r1_index_to_val, _ = current.instance.mip.solve_random_and_undo(Constants.timelimit_crossover_random_feasible)
 
     # If we don't find a random feasible solution
     if len(r1_index_to_val) == 0:

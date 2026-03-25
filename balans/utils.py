@@ -43,8 +43,8 @@ class Constants(NamedTuple):
     # Time limit for the initial solution to get feasible solution as a starting point for ALNS
     timelimit_first_solution = 20
 
-    # Time limit for finding a random feasible solution
-    timelimit_random_feasible = 20
+    # Time limit for finding a random feasible solution in crossover operator
+    timelimit_crossover_random_feasible = 20
 
     # time limit for one iteration is ALNS, local branching has longer time because hard problem created
     timelimit_alns_iteration = 60

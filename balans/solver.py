@@ -416,65 +416,6 @@ class Balans:
     def initial_obj_val(self) -> float:
         return self._initial_obj_val
 
-    def __str__(self) -> str:
-        separator = "=" * 60
-        lines = [
-            separator,
-            "BALANS Configuration",
-            separator,
-            f"  MIP Solver          : {self.mip_solver_str}",
-            f"  Seed                : {self.seed}",
-            f"  MIP Jobs            : {self.n_mip_jobs}",
-            "",
-            f"  {len(self.destroy_ops)} Destroy Operators  :",
-        ]
-        for op in self.destroy_ops:
-            lines.append(f"    - {op.__name__}")
-        lines.append("")
-        lines.append(f"  {len(self.repair_ops)} Repair Operators   :")
-        for op in self.repair_ops:
-            lines.append(f"    - {op.__name__}")
-        lines.append("")
-
-        # Selector details
-        lines.append(f"  Selector            : {type(self.selector).__name__}")
-        if isinstance(self.selector, MABSelector):
-            lines.append(f"    Scores            : {self.selector.scores}")
-            lines.append(f"    Learning Policy   : {self.selector.mab.learning_policy}")
-        lines.append("")
-
-        # Acceptance details
-        lines.append(f"  Acceptance          : {type(self.accept).__name__}")
-        if isinstance(self.accept, SimulatedAnnealing):
-            lines.append(f"    Start Temperature : {self.accept.start_temperature}")
-            lines.append(f"    End Temperature   : {self.accept.end_temperature}")
-            lines.append(f"    Step              : {self.accept.step}")
-            lines.append(f"    Method            : {self.accept.method}")
-        elif isinstance(self.accept, RecordToRecordTravel):
-            lines.append(f"    Start Threshold   : {self.accept.start_threshold}")
-            lines.append(f"    End Threshold     : {self.accept.end_threshold}")
-            lines.append(f"    Step              : {self.accept.step}")
-            lines.append(f"    Method            : {self.accept.method}")
-        lines.append("")
-
-        # Stopping criterion details
-        lines.append(f"  Stopping Criterion  : {type(self.stop).__name__}")
-        if isinstance(self.stop, MaxIterations):
-            lines.append(f"    Max Iterations    : {self.stop.max_iterations}")
-        elif isinstance(self.stop, MaxRuntime):
-            lines.append(f"    Max Runtime       : {self.stop.max_runtime}s")
-        elif isinstance(self.stop, NoImprovement):
-            lines.append(f"    Max No Improvement: {self.stop._max_iterations}")
-        lines.append("")
-
-        lines.append("  ALNS Time Limits:")
-        lines.append(f"    First Solution    : {Constants.timelimit_first_solution}s")
-        lines.append(f"    Random Feasible   : {Constants.timelimit_random_feasible}s")
-        lines.append(f"    ALNS Iteration    : {Constants.timelimit_alns_iteration}s")
-        lines.append(f"    Local Branching   : {Constants.timelimit_local_branching_iteration}s")
-        lines.append(separator)
-        return "\n".join(lines)
-
     def solve(self, instance_path, index_to_val=None) -> Result:
         """
         instance_path: the path to the MIP instance file
@@ -661,6 +602,65 @@ class Balans:
         check_false(instance_path == "", ValueError("Instance cannot be empty: " + str(instance_path)))
         check_false(instance_path is None, ValueError("Instance cannot be None: " + str(instance_path)))
         check_true(os.path.isfile(instance_path), ValueError("Instance must exist: " + str(instance_path)))
+
+    def __str__(self) -> str:
+        separator = "=" * 60
+        lines = [
+            separator,
+            "BALANS Configuration",
+            separator,
+            f"  MIP Solver          : {self.mip_solver_str}",
+            f"  Seed                : {self.seed}",
+            f"  MIP Jobs            : {self.n_mip_jobs}",
+            "",
+            f"  {len(self.destroy_ops)} Destroy Operators  :",
+        ]
+        for op in self.destroy_ops:
+            lines.append(f"    - {op.__name__}")
+        lines.append("")
+        lines.append(f"  {len(self.repair_ops)} Repair Operators   :")
+        for op in self.repair_ops:
+            lines.append(f"    - {op.__name__}")
+        lines.append("")
+
+        # Selector details
+        lines.append(f"  Selector            : {type(self.selector).__name__}")
+        if isinstance(self.selector, MABSelector):
+            lines.append(f"    Scores            : {self.selector.scores}")
+            lines.append(f"    Learning Policy   : {self.selector.mab.learning_policy}")
+        lines.append("")
+
+        # Acceptance details
+        lines.append(f"  Acceptance          : {type(self.accept).__name__}")
+        if isinstance(self.accept, SimulatedAnnealing):
+            lines.append(f"    Start Temperature : {self.accept.start_temperature}")
+            lines.append(f"    End Temperature   : {self.accept.end_temperature}")
+            lines.append(f"    Step              : {self.accept.step}")
+            lines.append(f"    Method            : {self.accept.method}")
+        elif isinstance(self.accept, RecordToRecordTravel):
+            lines.append(f"    Start Threshold   : {self.accept.start_threshold}")
+            lines.append(f"    End Threshold     : {self.accept.end_threshold}")
+            lines.append(f"    Step              : {self.accept.step}")
+            lines.append(f"    Method            : {self.accept.method}")
+        lines.append("")
+
+        # Stopping criterion details
+        lines.append(f"  Stopping Criterion  : {type(self.stop).__name__}")
+        if isinstance(self.stop, MaxIterations):
+            lines.append(f"    Max Iterations    : {self.stop.max_iterations}")
+        elif isinstance(self.stop, MaxRuntime):
+            lines.append(f"    Max Runtime       : {self.stop.max_runtime}s")
+        elif isinstance(self.stop, NoImprovement):
+            lines.append(f"    Max No Improvement: {self.stop._max_iterations}")
+        lines.append("")
+
+        lines.append("  ALNS Time Limits:")
+        lines.append(f"    First Solution    : {Constants.timelimit_first_solution}s")
+        lines.append(f"    ALNS Iteration    : {Constants.timelimit_alns_iteration}s")
+        lines.append(f"    Local Branching   : {Constants.timelimit_local_branching_iteration}s")
+        lines.append(f"    Crossover Random Feasible   : {Constants.timelimit_crossover_random_feasible}s")
+        lines.append(separator)
+        return "\n".join(lines)
 
 
 class ParBalans:
