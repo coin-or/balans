@@ -294,7 +294,7 @@ class SolverTest(BaseTest):
         """Balans(config='configs/default.json') should work."""
         b = Balans(config=ConfigFactory.DEFAULT_CONFIG_PATH)
         self.assertEqual(b.seed, 1283)
-        self.assertEqual(len(b.destroy_ops), 16)
+        self.assertEqual(len(b.destroy_ops), 10)
 
     def test_balans_config_custom(self):
         """Balans(config='test_config.json') should load operators, selector, accept, stop, and constants."""
@@ -346,7 +346,7 @@ class SolverTest(BaseTest):
         self.assertIn('accept', cfg)
         self.assertIn('stop', cfg)
         self.assertIn('seed', cfg)
-        self.assertEqual(len(cfg['destroy_operator_names']), 16)
+        self.assertEqual(len(cfg['destroy_operator_names']), 10)
 
     def test_balans_config_invalid_operator(self):
         """Config with an unknown operator name should raise ValueError."""
