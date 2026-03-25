@@ -56,15 +56,18 @@ class Constants(NamedTuple):
     # for Big-M constraint, currently used in Proximity
     M = 1000
 
-    # Data folder constants
+    # Folder names
     _TEST_DIR_NAME = "tests"
     _DATA_DIR_NAME = "data"
     _TEST_DATA_DIR_NAME = _TEST_DIR_NAME + os.sep + _DATA_DIR_NAME
+    _CONFIGS_DIR_NAME = "configs"
+    _TOP_CONFIGS_DIR_NAME = "top_configs"
 
-    # Data paths
+    # Folder paths
     _FILE_DIR = os.path.dirname(os.path.abspath(__file__))
     DATA_TEST = _FILE_DIR + os.sep + ".." + os.sep + _TEST_DATA_DIR_NAME
-
+    CONFIGS = _FILE_DIR + os.sep + _CONFIGS_DIR_NAME
+    TOP_CONFIGS = CONFIGS + os.sep + _TOP_CONFIGS_DIR_NAME
 
 
 # Global start time for elapsed time tracking, set when Balans.solve() is called

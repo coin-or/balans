@@ -19,6 +19,32 @@ class BalansConstructScipTest(BaseTest):
 
     BaseTest.mip_solver = Constants.scip_solver
 
+    def test_ijcai25_dmiplib_construction(self):
+        """Balans() with no arguments should succeed using default config."""
+        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25_dmiplib_sa_sm_linear.json")
+        self.assertIsNotNone(b)
+        self.assertIsInstance(b.seed, int)
+        self.assertIsInstance(b.n_mip_jobs, int)
+        self.assertIsInstance(b.mip_solver_str, str)
+        self.assertIsNotNone(b.destroy_ops)
+        self.assertIsNotNone(b.repair_ops)
+        self.assertIsNotNone(b.selector)
+        self.assertIsNotNone(b.accept)
+        self.assertIsNotNone(b.stop)
+
+    def test_ijcai25_miplibconstruction(self):
+        """Balans() with no arguments should succeed using default config."""
+        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25_miplib_sa_ts_same.json")
+        self.assertIsNotNone(b)
+        self.assertIsInstance(b.seed, int)
+        self.assertIsInstance(b.n_mip_jobs, int)
+        self.assertIsInstance(b.mip_solver_str, str)
+        self.assertIsNotNone(b.destroy_ops)
+        self.assertIsNotNone(b.repair_ops)
+        self.assertIsNotNone(b.selector)
+        self.assertIsNotNone(b.accept)
+        self.assertIsNotNone(b.stop)
+
     # ==================================================================
     # 1. Default construction
     # ==================================================================
@@ -42,7 +68,7 @@ class BalansConstructScipTest(BaseTest):
         self.assertEqual(b.seed, 1283)
         self.assertEqual(b.n_mip_jobs, 1)
         self.assertEqual(b.mip_solver_str, "scip")
-        self.assertEqual(len(b.destroy_ops), 16)
+        self.assertEqual(len(b.destroy_ops), 10)
         self.assertEqual(len(b.repair_ops), 1)
 
     def test_default_selector_type(self):
@@ -51,9 +77,9 @@ class BalansConstructScipTest(BaseTest):
         self.assertIsInstance(b.selector, MABSelector)
 
     def test_default_accept_type(self):
-        """Default acceptance should be SimulatedAnnealing."""
+        """Default acceptance should be HillClimbing."""
         b = Balans()
-        self.assertIsInstance(b.accept, SimulatedAnnealing)
+        self.assertIsInstance(b.accept, HillClimbing)
 
     def test_default_stop_type(self):
         """Default stop should be MaxIterations."""
@@ -745,7 +771,7 @@ class BalansConstructScipTest(BaseTest):
     def test_config_factory_load_operator_count(self):
         """Default config should have 16 destroy operators and 1 repair operator."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertEqual(len(cfg['destroy_operator_names']), 16)
+        self.assertEqual(len(cfg['destroy_operator_names']), 10)
         self.assertEqual(len(cfg['repair_operator_names']), 1)
 
     def test_config_factory_build_learning_policy_thompson(self):

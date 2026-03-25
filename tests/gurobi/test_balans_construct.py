@@ -42,7 +42,7 @@ class BalansConstructGurobiTest(BaseTest):
         self.assertEqual(b.seed, 1283)
         self.assertEqual(b.n_mip_jobs, 1)
         self.assertEqual(b.mip_solver_str, "scip")
-        self.assertEqual(len(b.destroy_ops), 16)
+        self.assertEqual(len(b.destroy_ops), 10)
         self.assertEqual(len(b.repair_ops), 1)
 
     def test_default_selector_type(self):
@@ -51,9 +51,9 @@ class BalansConstructGurobiTest(BaseTest):
         self.assertIsInstance(b.selector, MABSelector)
 
     def test_default_accept_type(self):
-        """Default acceptance should be SimulatedAnnealing."""
+        """Default acceptance should be HillClimbing."""
         b = Balans()
-        self.assertIsInstance(b.accept, SimulatedAnnealing)
+        self.assertIsInstance(b.accept, HillClimbing)
 
     def test_default_stop_type(self):
         """Default stop should be MaxIterations."""
@@ -744,7 +744,7 @@ class BalansConstructGurobiTest(BaseTest):
     def test_config_factory_load_operator_count(self):
         """Default config should have 16 destroy operators and 1 repair operator."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertEqual(len(cfg['destroy_operator_names']), 16)
+        self.assertEqual(len(cfg['destroy_operator_names']), 10)
         self.assertEqual(len(cfg['repair_operator_names']), 1)
 
     def test_config_factory_build_learning_policy_thompson(self):
