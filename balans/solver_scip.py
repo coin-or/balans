@@ -3,7 +3,7 @@ import random
 from typing import Dict, List, Tuple, Any
 
 import pyscipopt as scip
-from pyscipopt import quicksum, Expr
+from pyscipopt import quicksum, Expr, SCIP_PARAMEMPHASIS
 
 from balans.base_mip import _BaseMIP
 from balans.utils import Constants
@@ -20,6 +20,7 @@ class _SCIP(_BaseMIP):
         self.model.readProblem(instance_path)
         self.model.setParam("limits/maxorigsol", 0)
         self.model.setParam("randomization/randomseedshift", self.seed)
+        # self.model.setParam("parallel/maxnthreads", n_mip_jobs)
 
         # Set variables
         self.variables = self.model.getVars()
@@ -44,6 +45,10 @@ class _SCIP(_BaseMIP):
         obj_val = 0
         for key, item in self.org_objective_fn.terms.items():
             obj_val += item * index_to_val[key[0].getIndex()]
+
+        if self.is_obj_sense_changed:
+            obj_val = -obj_val
+
         return obj_val
 
     def extract_indexes(self) -> Tuple[List[Any], List[Any], List[Any]]:
@@ -122,8 +127,11 @@ class _SCIP(_BaseMIP):
         # add cutoff constraint depending on sense, so that next state is better quality
         # a slack variable z to prevent infeasible solution, \theta = 1
         self.proximity_z = self.model.addVar(vtype=Constants.continuous, lb=0)
+        # Use obj_val - delta * |obj_val| so the cutoff always tightens
+        # (moves in the improvement direction), even when obj_val < 0.
+        cutoff = obj_val - proximity_delta * abs(obj_val)
         self.constraints.append(self.model.addCons(self.model.getObjective() <=
-                                                   obj_val * (1 - proximity_delta) + self.proximity_z))
+                                                   cutoff + self.proximity_z))
 
         # M * z is to make sure model does not use z, unless needed to avoid infeasibility
         self.model.setObjective(zero_expr + one_expr + self.big_m * self.proximity_z, Constants.minimize)
@@ -140,8 +148,7 @@ class _SCIP(_BaseMIP):
                 self.constraints.append(self.model.addCons(var == index_to_val[var.getIndex()]))
 
     # TODO: modify random_objective to be consistent with Gurobi version,
-    #  have a delta value which control how much
-    #  coeffs you want to keep, and zero out others
+    #  have a delta value which control how much coeffs you want to keep, and zero out others
     # SK: may be we can parameterize these? So there can be a few different ways to randomize? and we don't loose code
     def random_objective(self) -> None:
         # Set the flag so we can undo
@@ -155,18 +162,26 @@ class _SCIP(_BaseMIP):
         objective.normalize()
         self.model.setObjective(objective, Constants.minimize)
 
-        self.model.setParam("limits/bestsol", 1)
-        self.model.setHeuristics(scip.SCIP_PARAMSETTING.OFF)
-
-    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None) -> Tuple[Dict[Any, float], float]:
+    def solve_and_undo(self,
+                       time_limit_in_sc=None,
+                       solution_limit=None,
+                       is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
 
         # Set limits
         if time_limit_in_sc is not None:
             self.model.setParam("limits/time", time_limit_in_sc)
         if solution_limit is not None:
             self.model.setParam("limits/bestsol", solution_limit)
+        if is_feasibility_focus:
+            self.model.setEmphasis(SCIP_PARAMEMPHASIS.FEASIBILITY)
+            self.model.setParam("heuristics/feaspump/freq", 1)
+            self.model.setParam("heuristics/feaspump/maxloops", 10)
 
         # Solve
+        # TODO: concurrent scip needs work
+        # if self.model.getParam("parallel/maxnthreads") > 1:
+        #     self.model.solveConcurrent()
+        # else:
         self.model.optimize()
 
         # Get solution
@@ -180,6 +195,10 @@ class _SCIP(_BaseMIP):
             self.model.setParam("limits/time", 1e+20)
         if solution_limit is not None:
             self.model.setParam("limits/bestsol", -1)
+        if is_feasibility_focus:
+            self.model.setEmphasis(SCIP_PARAMEMPHASIS.DEFAULT)
+            self.model.setParam("heuristics/feaspump/freq", -1)
+            self.model.setParam("heuristics/feaspump/maxloops", -1)
 
         # Remove constraints, and reset
         for ct in self.constraints:
@@ -206,25 +225,44 @@ class _SCIP(_BaseMIP):
         # Return solution
         return index_to_val, obj_val
 
-    def solve_random_and_undo(self, time_limit_in_sc=None) -> Tuple[Dict[Any, float], float]:
+    def solve_random_and_undo(self,
+                              time_limit_in_sc=None,
+                              solution_limit=None,
+                              is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
 
         # Set limits
         if time_limit_in_sc is not None:
             self.model.setParam("limits/time", time_limit_in_sc)
+        if solution_limit is not None:
+            self.model.setParam("limits/bestsol", solution_limit)
+        if is_feasibility_focus:
+            self.model.setEmphasis(SCIP_PARAMEMPHASIS.FEASIBILITY)
+            self.model.setParam("heuristics/feaspump/freq", 1)
+            self.model.setParam("heuristics/feaspump/maxloops", 10)
 
         self.random_objective()
 
         # Solve
+        # TODO: concurrent scip needs work
+        # if self.model.getParam("parallel/maxnthreads") > 1:
+        #     self.model.solveConcurrent()
+        # else:
         self.model.optimize()
 
         r1_index_to_val, r1_obj_val = self.get_index_to_val_and_objective()
 
         # Get back the original model
         self.model.freeTransform()
-        self.model.setParam("limits/bestsol", -1)
-        self.model.setHeuristics(scip.SCIP_PARAMSETTING.DEFAULT)
+
+        # Undo limits
         if time_limit_in_sc is not None:
             self.model.setParam("limits/time", 1e+20)
+        if solution_limit is not None:
+            self.model.setParam("limits/bestsol", -1)
+        if is_feasibility_focus:
+            self.model.setEmphasis(SCIP_PARAMEMPHASIS.DEFAULT)
+            self.model.setParam("heuristics/feaspump/freq", -1)
+            self.model.setParam("heuristics/feaspump/maxloops", -1)
 
         # Reset to original objective
         self.is_obj_transformed = False
@@ -252,7 +290,13 @@ class _SCIP(_BaseMIP):
                 int_index.append(count)
             count += 1
 
+        # Solve
+        # TODO: concurrent scip needs work
+        # if self.model.getParam("parallel/maxnthreads") > 1:
+        #     self.model.solveConcurrent()
+        # else:
         self.model.optimize()
+
         lp_index_to_val, lp_obj_val = self.get_index_to_val_and_objective()
 
         # Get back the original model

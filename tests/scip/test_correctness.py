@@ -22,7 +22,7 @@ class CorrectnessTest(BaseTest):
     @unittest.skipIf(is_skip, "Skipping correctness 1")
     def test_correctness1(self):
         # Input
-        instance = "50v-10.mps"
+        instance = "correctness_50v-10.mps"
         instance_path = os.path.join(Constants.DATA_TEST, instance)
         # Balans
         balans = Balans(destroy_ops=[DestroyOperators.Crossover,
@@ -50,7 +50,7 @@ class CorrectnessTest(BaseTest):
     @unittest.skipIf(is_skip, "Skipping correctness 2")
     def test_correctness2(self):
         # Input
-        instance = "30n20b8.mps"
+        instance = "correctness_30n20b8.mps"
         instance_path = os.path.join(Constants.DATA_TEST, instance)
         # Balans
         balans = Balans(destroy_ops=[DestroyOperators.Crossover,
@@ -78,7 +78,7 @@ class CorrectnessTest(BaseTest):
     @unittest.skipIf(is_skip, "Skipping correctness 3")
     def test_correctness3(self):
         # Input
-        instance = "b1c1s1.mps"
+        instance = "correctness_b1c1s1.mps"
         instance_path = os.path.join(Constants.DATA_TEST, instance)
         # Balans
         balans = Balans(destroy_ops=[DestroyOperators.Crossover,

@@ -21,7 +21,7 @@ class BalansConstructScipTest(BaseTest):
 
     def test_ijcai25_dmiplib_construction(self):
         """Balans() with no arguments should succeed using default config."""
-        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25_dmiplib_sa_sm_linear.json")
+        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25" + os.sep + "dmiplib_sa_sm_linear.json")
         self.assertIsNotNone(b)
         self.assertIsInstance(b.seed, int)
         self.assertIsInstance(b.n_mip_jobs, int)
@@ -34,7 +34,7 @@ class BalansConstructScipTest(BaseTest):
 
     def test_ijcai25_miplibconstruction(self):
         """Balans() with no arguments should succeed using default config."""
-        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25_miplib_sa_ts_same.json")
+        b = Balans(config=Constants.TOP_CONFIGS + os.sep + "ijcai25" + os.sep + "miplib_sa_ts_same.json")
         self.assertIsNotNone(b)
         self.assertIsInstance(b.seed, int)
         self.assertIsInstance(b.n_mip_jobs, int)
@@ -474,14 +474,14 @@ class BalansConstructScipTest(BaseTest):
         cfg = {
             "mip_solver": "scip",
             "seed": 5000,
-            "destroy_operators": ["Crossover", "Mutation_25"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover", "Mutation_25"],
+            "repair_ops": ["Repair"],
             "selector": {
                 "type": "RouletteWheel",
                 "scores": [3, 2, 1, 0],
                 "decay": 0.8
             },
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 3}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -499,10 +499,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with RandomSelect selector should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Mutation_50", "Rins_25"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Mutation_50", "Rins_25"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {"type": "AlwaysAccept"},
+            "accept": {"type": "AlwaysAccept"},
             "stop": {"type": "MaxIterations", "max_iterations": 2}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -518,14 +518,14 @@ class BalansConstructScipTest(BaseTest):
         """Config with AlphaUCB selector should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Mutation_50"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Mutation_50"],
+            "repair_ops": ["Repair"],
             "selector": {
                 "type": "AlphaUCB",
                 "scores": [1, 1, 0, 0],
                 "alpha": 0.8
             },
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxRuntime", "max_runtime": 60}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -542,10 +542,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with SimulatedAnnealing acceptance should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {
+            "accept": {
                 "type": "SimulatedAnnealing",
                 "start_temperature": 100,
                 "end_temperature": 5,
@@ -568,10 +568,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with RecordToRecordTravel acceptance should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {
+            "accept": {
                 "type": "RecordToRecordTravel",
                 "start_threshold": 10,
                 "end_threshold": 1,
@@ -591,10 +591,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with GreatDeluge acceptance should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {
+            "accept": {
                 "type": "GreatDeluge",
                 "alpha": 1.01,
                 "beta": 0.5
@@ -613,10 +613,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with RandomAccept acceptance should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {
+            "accept": {
                 "type": "RandomAccept",
                 "start_prob": 0.9,
                 "end_prob": 0.1,
@@ -636,10 +636,10 @@ class BalansConstructScipTest(BaseTest):
         """Config with NoImprovement stop should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "NoImprovement", "max_iterations": 50}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -654,15 +654,15 @@ class BalansConstructScipTest(BaseTest):
         """Config constants overrides should be stored on the instance — not in the global Constants class."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {"type": "RandomSelect"},
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1},
             "timelimit_first_solution": 5,
             "timelimit_alns_iteration": 15,
             "timelimit_crossover_random_feasible": 10,
-            "M": 2000
+            "big_m": 2000
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             json.dump(cfg, f)
@@ -686,8 +686,8 @@ class BalansConstructScipTest(BaseTest):
         """Config with EpsilonGreedy learning policy should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover", "Mutation_50"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover", "Mutation_50"],
+            "repair_ops": ["Repair"],
             "selector": {
                 "type": "MABSelector",
                 "scores": [5, 2, 1, 0],
@@ -696,7 +696,7 @@ class BalansConstructScipTest(BaseTest):
                     "epsilon": 0.25
                 }
             },
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -712,8 +712,8 @@ class BalansConstructScipTest(BaseTest):
         """Config with Softmax learning policy should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {
                 "type": "MABSelector",
                 "scores": [3, 2, 1, 0],
@@ -722,7 +722,7 @@ class BalansConstructScipTest(BaseTest):
                     "tau": 2.0
                 }
             },
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -737,8 +737,8 @@ class BalansConstructScipTest(BaseTest):
         """Config with UCB1 learning policy should build correctly."""
         cfg = {
             "mip_solver": "scip",
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
             "selector": {
                 "type": "MABSelector",
                 "scores": [3, 2, 1, 0],
@@ -747,7 +747,7 @@ class BalansConstructScipTest(BaseTest):
                     "alpha": 1.5
                 }
             },
-            "acceptance": {"type": "HillClimbing"},
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -765,10 +765,10 @@ class BalansConstructScipTest(BaseTest):
     def test_config_factory_load_keys(self):
         """ConfigFactory.load should return all expected keys."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertIn('destroy_operators', cfg)
-        self.assertIn('repair_operators', cfg)
+        self.assertIn('destroy_ops', cfg)
+        self.assertIn('repair_ops', cfg)
         self.assertIn('selector', cfg)
-        self.assertIn('acceptance', cfg)
+        self.assertIn('accept', cfg)
         self.assertIn('stop', cfg)
         self.assertIn('seed', cfg)
         self.assertIn('n_mip_jobs', cfg)
@@ -777,13 +777,13 @@ class BalansConstructScipTest(BaseTest):
         self.assertIn('timelimit_alns_iteration', cfg)
         self.assertIn('timelimit_local_branching_iteration', cfg)
         self.assertIn('timelimit_crossover_random_feasible', cfg)
-        self.assertIn('M', cfg)
+        self.assertIn('big_m', cfg)
 
     def test_config_factory_load_operator_count(self):
         """Default config should have 16 destroy operators and 1 repair operator."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertEqual(len(cfg['destroy_operators']), 10)
-        self.assertEqual(len(cfg['repair_operators']), 1)
+        self.assertEqual(len(cfg['destroy_ops']), 10)
+        self.assertEqual(len(cfg['repair_ops']), 1)
 
     def test_config_factory_build_learning_policy_thompson(self):
         """build_learning_policy should produce ThompsonSampling."""
@@ -1007,8 +1007,8 @@ class BalansConstructScipTest(BaseTest):
     def test_invalid_config_operator_name(self):
         """Config with unknown destroy operator name should raise ValueError."""
         bad_config = {
-            "destroy_operators": ["NonExistentOperator"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["NonExistentOperator"],
+            "repair_ops": ["Repair"],
             "stop": {"type": "MaxIterations", "max_iterations": 1}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -1021,9 +1021,9 @@ class BalansConstructScipTest(BaseTest):
     def test_invalid_config_unknown_constant(self):
         """Config with unknown constant key should raise ValueError."""
         bad_config = {
-            "destroy_operators": ["Crossover"],
-            "repair_operators": ["Repair"],
-            "acceptance": {"type": "HillClimbing"},
+            "destroy_ops": ["Crossover"],
+            "repair_ops": ["Repair"],
+            "accept": {"type": "HillClimbing"},
             "stop": {"type": "MaxIterations", "max_iterations": 1},
             "nonexistent_constant": 999
         }

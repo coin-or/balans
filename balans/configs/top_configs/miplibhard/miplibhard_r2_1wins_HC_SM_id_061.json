@@ -1,6 +1,6 @@
 {
   "seed": 57506,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_40",
     "Mutation_50",
@@ -13,7 +13,7 @@
     "Local_Branching_40",
     "Local_Branching_50"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -29,7 +29,7 @@
       "tau": 1.800747
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "HillClimbing"
   }
 }

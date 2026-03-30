@@ -1,5 +1,5 @@
 import sys
-
+import numpy as np
 from balans.solver import Balans
 
 
@@ -19,7 +19,10 @@ def main():
 
     # print("Best solution:", result.best_state.solution())
     print("Best solution objective:", result.best_state.objective())
-
+    print("Objective trace:", result.statistics.objectives)
+    print("Runtime trace:", result.statistics.runtimes)
+    print("Runtime trace (cumulative):", np.cumsum(result.statistics.runtimes))
+    print("Operator counts:", result.statistics.destroy_operator_counts)
 
 if __name__ == "__main__":
     main()

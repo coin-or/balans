@@ -20,7 +20,7 @@ from balans.utils import timestamp
 
 def local_branching_relax(current: _State, rnd_state, delta) -> _State:
     print(f"{timestamp()} *** Operator: LB relax")
-    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

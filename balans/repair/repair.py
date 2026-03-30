@@ -8,6 +8,6 @@ def repair(current: _State, rnd_state) -> _State:
     # Solve the state with fixed variables to repair and update solution and objective
     current.solve_and_update()
 
-    print(f"{timestamp()} \t Repair objective: {current.obj_val}")
+    print(f"{timestamp()} \t Repair objective: {current.instance.display_obj(current.obj_val)}")
 
     return current

@@ -3,7 +3,7 @@
   "n_mip_jobs": 1,
   "seed": 1283,
 
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_50",
     "Rins_40",
@@ -16,7 +16,7 @@
     "Local_Branching_50"
   ],
 
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
 
@@ -29,18 +29,18 @@
     }
   },
 
-  "acceptance": {
+  "accept": {
     "type": "HillClimbing"
   },
 
   "stop": {
     "type": "MaxRuntime",
-    "max_runtime": 300
+    "max_runtime": 60
   },
 
-  "timelimit_first_solution": 20,
-  "timelimit_crossover_random_feasible": 20,
-  "timelimit_alns_iteration": 60,
-  "timelimit_local_branching_iteration": 150,
-  "M": 1000
+  "timelimit_first_solution": 10,
+  "timelimit_crossover_random_feasible": 6,
+  "timelimit_alns_iteration": 12,
+  "timelimit_local_branching_iteration": 15,
+  "big_m": 1000
 }

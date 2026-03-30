@@ -12,7 +12,7 @@ def _rens(current: _State, rnd_state, delta) -> _State:
     #  rens_float_set to base_instance.
 
     print(f"{timestamp()} *** Operator: RENS (delta={delta * 100:.0f}%)")
-    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

@@ -1,6 +1,6 @@
 {
   "seed": 29564,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_30",
     "Mutation_40",
@@ -17,7 +17,7 @@
     "Local_Branching_10",
     "Local_Branching_30"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -32,7 +32,7 @@
       "type": "ThompsonSampling"
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "HillClimbing"
   }
 }

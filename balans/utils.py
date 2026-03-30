@@ -263,16 +263,16 @@ class ConfigFactory:
         'seed',
         'n_mip_jobs',
         'mip_solver',
-        'destroy_operators',
-        'repair_operators',
+        'destroy_ops',
+        'repair_ops',
         'selector',
-        'acceptance',
+        'accept',
         'stop',
         'timelimit_first_solution',
         'timelimit_alns_iteration',
         'timelimit_local_branching_iteration',
         'timelimit_crossover_random_feasible',
-        'M',
+        'big_m',
     })
 
     @staticmethod

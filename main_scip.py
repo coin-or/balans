@@ -15,3 +15,6 @@ model.optimize()
 solution = model.getBestSol()
 # print("Best solution:", solution)
 print("Best objective:", model.getObjVal())
+
+# Check if a problem is maximization or minization
+# python -c "import pyscipopt; m=pyscipopt.Model(); m.readProblem('tests/data/pk1.mps'); print(m.getObjectiveSense())"

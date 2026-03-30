@@ -1,4 +1,4 @@
-# ALNS for adaptive large neigborhood
+# ALNS for adaptive large neighborhood
 from alns.accept import SimulatedAnnealing
 from alns.select import MABSelector
 from alns.stop import MaxIterations, MaxRuntime
@@ -8,6 +8,8 @@ from mabwiser.mab import LearningPolicy
 
 # Balans meta-solver for solving mixed integer programming problems
 from balans.solver import Balans, DestroyOperators, RepairOperators
+
+import numpy as np
 
 # Destroy operators
 destroy_ops = [DestroyOperators.Crossover,
@@ -58,14 +60,25 @@ balans = Balans(destroy_ops=destroy_ops,
                 selector=selector,
                 accept=accept,
                 stop=stop,
-                mip_solver="scip")
+                seed=1283,
+                n_mip_jobs=4,
+                mip_solver="scip",
+                timelimit_first_solution=10,
+                timelimit_alns_iteration=5,
+                timelimit_local_branching_iteration=10,
+                timelimit_crossover_random_feasible=5,
+                big_m=1000)
 
 # Run
-instance_path = "tests/data/noswot.mps"
+instance_path = "tests/data/correctness_mk_5_maximize.lp"
 result = balans.solve(instance_path)
 
 # print("Best solution:", result.best_state.solution())
 print("Best objective:", result.best_state.objective())
+print("Objective trace:", result.statistics.objectives)
+# print("Runtime trace:", result.statistics.runtimes)
+print("Runtime trace (cumulative):", np.cumsum(result.statistics.runtimes))
+print("Operator to reward (best, better, accept, reject) counts:", dict(result.statistics.destroy_operator_counts))
 
 # The installed CLI entry point lives in balans/main.py.
 # from balans.main_balans import main

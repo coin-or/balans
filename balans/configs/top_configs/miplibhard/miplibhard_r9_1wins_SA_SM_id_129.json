@@ -1,6 +1,6 @@
 {
   "seed": 91055,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_30",
     "Mutation_40",
@@ -17,7 +17,7 @@
     "Local_Branching_30",
     "Local_Branching_50"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -33,7 +33,7 @@
       "tau": 1.56157
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "SimulatedAnnealing",
     "step": 0.875739
   }

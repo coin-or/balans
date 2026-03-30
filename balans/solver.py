@@ -1,10 +1,10 @@
+import glob
 import os
 import random
 from typing import List, Optional, Dict, Tuple
 from typing import NamedTuple
 import pickle
 from multiprocessing import Pool
-from functools import partial
 
 import numpy as np
 from alns.ALNS import ALNS
@@ -365,13 +365,13 @@ class Balans:
             timelimit_crossover_random_feasible = cfg.get('timelimit_crossover_random_feasible',
                                                           Constants.timelimit_crossover_random_feasible)
         if big_m is None:
-            big_m = cfg.get('M', Constants.M)
+            big_m = cfg.get('big_m', Constants.M)
 
         # --- Complex types: kwarg > build from cfg > hardcoded default (matching default.json) ---
         # Destroy operators
         if destroy_ops is None:
-            if 'destroy_operators' in cfg:
-                destroy_ops = ConfigFactory.resolve_operators(cfg['destroy_operators'],
+            if 'destroy_ops' in cfg:
+                destroy_ops = ConfigFactory.resolve_operators(cfg['destroy_ops'],
                                                               _DESTROY_OP_MAP, kind="destroy operator")
             else:
                 destroy_ops = [crossover,
@@ -384,16 +384,16 @@ class Balans:
 
         # Repair operators
         if repair_ops is None:
-            if 'repair_operators' in cfg:
-                repair_ops = ConfigFactory.resolve_operators(cfg['repair_operators'],
+            if 'repair_ops' in cfg:
+                repair_ops = ConfigFactory.resolve_operators(cfg['repair_ops'],
                                                              _REPAIR_OP_MAP, kind="repair operator")
             else:
                 repair_ops = [repair]
 
         # Acceptance criterion
         if accept is None:
-            if 'acceptance' in cfg:
-                accept = ConfigFactory.build_acceptance(cfg['acceptance'])
+            if 'accept' in cfg:
+                accept = ConfigFactory.build_acceptance(cfg['accept'])
             else:
                 accept = HillClimbing()
 
@@ -421,6 +421,7 @@ class Balans:
                                    timelimit_crossover_random_feasible)
 
         # Parameters
+        self.config = config
         self.destroy_ops = destroy_ops
         self.repair_ops = repair_ops
         self.selector = selector
@@ -501,7 +502,11 @@ class Balans:
         print(f"{timestamp()} Finding initial solution...")
         self._initial_index_to_val, self._initial_obj_val = self._instance.initial_solve(index_to_val=index_to_val)
 
-        print(f"{timestamp()} >>> START objective: {self._initial_obj_val}")
+        # Display the initial objective in original space for the user
+        display_obj = self._initial_obj_val
+        if self._instance.mip.is_obj_sense_changed:
+            display_obj = -self._initial_obj_val
+        print(f"{timestamp()} >>> START objective: {display_obj}")
 
         # Initial state and solution
         initial_state = _State(self.instance, self.initial_index_to_val, self.initial_obj_val,
@@ -516,14 +521,15 @@ class Balans:
             # Iterate ALNS
             result = self.alns.iterate(initial_state, self.selector, self.accept, self.stop)
 
-            # Restore the original objective results, if max problem is reversed
+            # During ALNS, all objectives are in minimized space (negated for max problems).
+            # Convert everything back to original space for user-facing output.
             if self.instance.mip.is_obj_sense_changed:
-                obj_list = []
-                for obj in result.statistics.objectives:
-                    obj_list.append(-obj)
-                result.statistics._objectives = obj_list
+                result.statistics._objectives = [-obj for obj in result.statistics.objectives]
+                result.best_state.obj_val = -result.best_state.obj_val
+                self._initial_obj_val = -self._initial_obj_val
 
-            print(f"{timestamp()} >>> FINISH objective: {result.best_state.objective()}")
+            print(f"{timestamp()} >>> FINISH objective: {result.best_state.objective()} "
+                  f"(initial objective: {self._initial_obj_val})")
         else:
             result = None
 
@@ -680,6 +686,10 @@ class Balans:
             separator,
             "BALANS Configuration",
             separator,
+        ]
+        if self.config is not None:
+            lines.append(f"  Config File         : {self.config}")
+        lines += [
             f"  MIP Solver          : {self.mip_solver_str}",
             f"  Seed                : {self.seed}",
             f"  ALNS Seed           : {self.alns_seed}",
@@ -727,7 +737,7 @@ class Balans:
         lines.append("")
 
         lines.append("  ALNS Time Limits:")
-        lines.append(f"    First Solution              : {self.timelimit_first_solution}s")
+        lines.append(f"    Initial Solution            : {self.timelimit_first_solution}s")
         lines.append(f"    ALNS Iteration              : {self.timelimit_alns_iteration}s")
         lines.append(f"    Local Branching Iteration   : {self.timelimit_local_branching_iteration}s")
         lines.append(f"    Crossover Random Feasible   : {self.timelimit_crossover_random_feasible}s")
@@ -740,7 +750,22 @@ class Balans:
 class ParBalans:
     """
     ParBalans: Run several Balans configurations in parallel.
+
+    .. note::
+
+       On Windows (and any platform that uses the *spawn* multiprocessing
+       start method), the calling script **must** guard its top-level code
+       with ``if __name__ == '__main__':`` to avoid an infinite re-import
+       loop.  Example::
+
+           if __name__ == '__main__':
+               parbalans = ParBalans(n_jobs=4, mip_solver="scip")
+               best_sol, best_obj = parbalans.run("instance.mps")
     """
+
+    # Valid string aliases for the built-in generators
+    RANDOM_CONFIGS = "random_configs"
+    TOP_CONFIGS    = "top_configs"
 
     def __init__(self,
                  n_jobs: int = 1,
@@ -750,7 +775,8 @@ class ParBalans:
                  balans_generator=None):
         """
         ParBalans runs several Balans configurations in parallel.
-        See class members for the possible pool of configurations used to generate random Balans configs.
+        Configurations can be random (ParBalans.RANDOM_CONFIGS) or top performance (ParBalans.TOP_CONFIGS)
+        Alternatively, a custom function can be given that returns a list of Balans objects of size n_jobs.
 
         Parameters
         ----------
@@ -758,12 +784,19 @@ class ParBalans:
         n_mip_jobs: The number of threads for the underlying mip solver, only supported by Gurobi
         mip_solver: "scip" or "gurobi"
         output_dir: Saves one file per parallel Balans run as a pickle object
-                    The object is tuple with three elements: obj_of_iteration, time_of_iteration, and arm_to_reward_counts
-                    There N+1 iterations, including the initial solution
+                    The object is a tuple with three elements: obj_of_iteration, time_of_iteration, and arm_to_reward_counts
+                    There are N+1 iterations, including the initial solution
                     The time is cumulative runtime when the iteration happens
                     Reward counts is the overall statistics
-        balans_generator: A function that generates a Balans instance for each parallel run.
-                          If none given, a default random Balans generator is used.
+        balans_generator: Controls which Balans configurations are run in parallel. Three options:
+                          - "random_configs" : each parallel slot gets a randomly generated Balans config
+                            (calls ParBalans._generate_random_balans).
+                          - "top_configs"    : parallel slots are filled with the curated top configs
+                            from balans/configs/top_configs/, in priority order
+                            (calls ParBalans._generate_top_configs).
+                          - callable         : a user-supplied function that takes no arguments and
+                            returns a Balans instance (or a list of Balans instances for n_jobs slots).
+                          - None             : defaults to "top_configs".
         """
 
         # Set params
@@ -771,11 +804,18 @@ class ParBalans:
         self.n_mip_jobs = n_mip_jobs
         self.mip_solver = mip_solver
         self.output_dir = output_dir
-        self.balans_generator = balans_generator
 
-        # If no balans generator is given, use random balans generator by default
-        if self.balans_generator is None:
+        # Resolve balans_generator: string alias, callable, or default
+        if balans_generator is None or balans_generator == ParBalans.TOP_CONFIGS:
+            self.balans_generator = ParBalans._generate_top_configs
+        elif balans_generator == ParBalans.RANDOM_CONFIGS:
             self.balans_generator = ParBalans._generate_random_balans
+        elif callable(balans_generator):
+            self.balans_generator = balans_generator
+        else:
+            raise ValueError(f"Error: ParBalans balans_generator must be '{ParBalans.RANDOM_CONFIGS}', "
+                             f""f"'{ParBalans.TOP_CONFIGS}', a callable, or None. "
+                             f"Got: {balans_generator!r}")
 
         # Create the results directory
         os.makedirs(self.output_dir, exist_ok=True)
@@ -794,19 +834,23 @@ class ParBalans:
         # Create a dummy solver to understand objective sense
         mip = create_mip_solver(instance_path, Constants.default_seed, self.n_mip_jobs, self.mip_solver)
 
-        # Can create other config generator function, random_config() just an example
-        with Pool(processes=self.n_jobs) as pool:
-            best_sol_and_obj_of_job = pool.map(partial(self._solve_instance_with_balans,
-                                                       instance_path=instance_path,
-                                                       index_to_val=index_to_val,
-                                                       balans=self.balans_generator()),
-                                               range(self.n_jobs))
+        # Generate one Balans instance per parallel job
+        balans_list = self.balans_generator(self.n_jobs, self.mip_solver, self.n_mip_jobs)
 
-        # Get the best objective value and its index base on the objective sense
-        if mip.org_objective_sense == -1 or Constants.maximize:
+        with Pool(processes=self.n_jobs) as pool:
+            best_sol_and_obj_of_job = pool.starmap(self._solve_instance_with_balans,
+                                                   [(idx, instance_path, index_to_val, balans_list[idx])
+                                                    for idx in range(self.n_jobs)])
+
+        # Balans.solve() converts objectives to original space before returning.
+        # Compare based on the original objective sense.
+        if mip.is_obj_sense_changed:
+            # Maximization: pick the largest original-space objective
             best_index_to_val, best_obj = max(best_sol_and_obj_of_job, key=lambda t: t[1])
         else:
+            # Minimization: pick the smallest objective
             best_index_to_val, best_obj = min(best_sol_and_obj_of_job, key=lambda t: t[1])
+
         return best_index_to_val, best_obj
 
     def _solve_instance_with_balans(self, idx, instance_path, index_to_val, balans):
@@ -817,7 +861,7 @@ class ParBalans:
             result = balans.solve(instance_path)
 
         if result:
-            # There N+1 iterations, including the initial solution
+            # There are N+1 iterations, including the initial solution
             # The time is cumulative runtime when the iteration happens
             # Reward counts is the overall statistics
             obj_of_iteration = result.statistics.objectives
@@ -828,10 +872,29 @@ class ParBalans:
             result_path = os.path.join(self.output_dir, f"result_{idx}.pkl")
             with open(result_path, "wb") as fp:
                 pickle.dump(r, fp)
+
         return result.best_state.solution(), result.best_state.objective()
 
     @staticmethod
-    def _generate_random_balans(n_mip_jobs: int = Constants.default_n_mip_jobs, mip_solver: str = Constants.default_solver) -> Balans:
+    def _generate_random_balans(n_jobs: int,
+                                mip_solver: str = Constants.default_solver,
+                                n_mip_jobs: int = Constants.default_n_mip_jobs) -> List[Balans]:
+        """Return a list of *n_jobs* independently randomised Balans instances.
+
+        Parameters
+        ----------
+        n_jobs : int
+            Number of Balans instances to create.
+        mip_solver : str
+            MIP solver backend passed to every Balans instance.
+        n_mip_jobs : int
+            Number of parallel MIP threads passed to every Balans instance.
+
+        Returns
+        -------
+        list[Balans]
+            Exactly *n_jobs* Balans instances, each with a different random config.
+        """
 
         # Pool of options
         DESTROY_CATEGORIES = {"crossover": [DestroyOperators.Crossover],
@@ -859,76 +922,165 @@ class ParBalans:
                          "numeric": [[3, 2, 1, 0], [5, 2, 1, 0], [5, 4, 2, 0], [8, 3, 1, 0],
                                      [8, 4, 2, 1], [16, 4, 2, 1]]}
 
-        # Destroy
-        num_destroy = random.randint(len(DESTROY_CATEGORIES) - 2, len(DESTROY_CATEGORIES) * 3)
-        chosen_destroy_ops = []
-        if num_destroy > len(DESTROY_CATEGORIES) - 1:
-            # Choose at least one member from each category
-            for category in DESTROY_CATEGORIES:
-                element = random.choice(DESTROY_CATEGORIES[category])
-                chosen_destroy_ops.append(element)
+        balans_list: List[Balans] = []
+        for _ in range(n_jobs):
 
-            # Remove the already chosen elements from the pool
-            all_elements = [item for sublist in DESTROY_CATEGORIES.values() for item in sublist]
-            remaining_pool = list(set(all_elements) - set(chosen_destroy_ops))
+            # Destroy
+            num_destroy = random.randint(len(DESTROY_CATEGORIES) - 2, len(DESTROY_CATEGORIES) * 3)
+            chosen_destroy_ops = []
+            if num_destroy > len(DESTROY_CATEGORIES) - 1:
+                # Choose at least one member from each category
+                for category in DESTROY_CATEGORIES:
+                    element = random.choice(DESTROY_CATEGORIES[category])
+                    chosen_destroy_ops.append(element)
 
-            # Choose the remaining elements randomly from the remaining pool
-            remaining_elements = num_destroy - len(DESTROY_CATEGORIES)
-            chosen_destroy_ops.extend(random.sample(remaining_pool, remaining_elements))
-        else:
-            # Choose the categories to be included
-            chosen_categories = random.sample(list(DESTROY_CATEGORIES.keys()), num_destroy)
+                # Remove the already chosen elements from the pool
+                all_elements = [item for sublist in DESTROY_CATEGORIES.values() for item in sublist]
+                remaining_pool = list(set(all_elements) - set(chosen_destroy_ops))
 
-            # Choose one element from each chosen category
-            for category in chosen_categories:
-                element = random.choice(DESTROY_CATEGORIES[category])
-                chosen_destroy_ops.append(element)
+                # Choose the remaining elements randomly from the remaining pool
+                remaining_elements = num_destroy - len(DESTROY_CATEGORIES)
+                chosen_destroy_ops.extend(random.sample(remaining_pool, remaining_elements))
+            else:
+                # Choose the categories to be included
+                chosen_categories = random.sample(list(DESTROY_CATEGORIES.keys()), num_destroy)
 
-        # Accept
-        chosen_accept_type = []
-        for op in ACCEPT_TYPE:
-            if "HillClimbing" in op:
-                chosen_accept_type.append(HillClimbing())
-            if "SimulatedAnnealing" in op:
-                chosen_accept_type.append(SimulatedAnnealing(start_temperature=10,
-                                                             end_temperature=1,
-                                                             step=random.uniform(0.01, 1),
-                                                             method="linear"))
-        acceptance_obj = random.choice(chosen_accept_type)
+                # Choose one element from each chosen category
+                for category in chosen_categories:
+                    element = random.choice(DESTROY_CATEGORIES[category])
+                    chosen_destroy_ops.append(element)
 
-        # Learning Policy
-        chosen_learning_policy = []
-        for op in LEARNING_POLICY:
-            if "EpsilonGreedy" in op:
-                chosen_learning_policy.append(LearningPolicy.EpsilonGreedy(epsilon=random.uniform(0.01, 0.5)))
-            if "Softmax" in op:
-                chosen_learning_policy.append(LearningPolicy.Softmax(tau=random.uniform(1, 3)))
-            if "ThompsonSampling" in op:
-                chosen_learning_policy.append(LearningPolicy.ThompsonSampling())
-        chosen_lp = random.choice(chosen_learning_policy)
+            # Accept
+            chosen_accept_type = []
+            for op in ACCEPT_TYPE:
+                if "HillClimbing" in op:
+                    chosen_accept_type.append(HillClimbing())
+                if "SimulatedAnnealing" in op:
+                    chosen_accept_type.append(SimulatedAnnealing(start_temperature=10,
+                                                                 end_temperature=1,
+                                                                 step=random.uniform(0.01, 1),
+                                                                 method="linear"))
+            acceptance_obj = random.choice(chosen_accept_type)
 
-        # Rewards
-        chosen_scores = random.choice(LP_to_REWARDS["numeric"])
-        if isinstance(chosen_lp, LearningPolicy.ThompsonSampling):
-            chosen_scores = random.choice(LP_to_REWARDS["binary"])
+            # Learning Policy
+            chosen_learning_policy = []
+            for op in LEARNING_POLICY:
+                if "EpsilonGreedy" in op:
+                    chosen_learning_policy.append(LearningPolicy.EpsilonGreedy(epsilon=random.uniform(0.01, 0.5)))
+                if "Softmax" in op:
+                    chosen_learning_policy.append(LearningPolicy.Softmax(tau=random.uniform(1, 3)))
+                if "ThompsonSampling" in op:
+                    chosen_learning_policy.append(LearningPolicy.ThompsonSampling())
+            chosen_lp = random.choice(chosen_learning_policy)
 
-        # Seed
-        chosen_seed = random.randint(1, 100000)
+            # Rewards
+            chosen_scores = random.choice(LP_to_REWARDS["numeric"])
+            if isinstance(chosen_lp, LearningPolicy.ThompsonSampling):
+                chosen_scores = random.choice(LP_to_REWARDS["binary"])
 
-        # Stop
-        stop = MaxIterations(10)  # MaxRuntime(100)
+            # Seed
+            chosen_seed = random.randint(1, 100000)
 
-        # Balans
-        balans = Balans(destroy_ops=chosen_destroy_ops,
-                        repair_ops=REPAIR_OPERATORS,
-                        selector=MABSelector(scores=chosen_scores,
-                                             num_destroy=len(chosen_destroy_ops),
-                                             num_repair=len(REPAIR_OPERATORS),
-                                             learning_policy=chosen_lp,
-                                             seed=chosen_seed),
-                        accept=acceptance_obj,
-                        stop=stop,
-                        n_mip_jobs=n_mip_jobs,
-                        mip_solver=mip_solver)
+            # Stop
+            stop = MaxIterations(10)  # MaxRuntime(100)
 
-        return balans
+            # Balans
+            balans = Balans(destroy_ops=chosen_destroy_ops,
+                            repair_ops=REPAIR_OPERATORS,
+                            selector=MABSelector(scores=chosen_scores,
+                                                 num_destroy=len(chosen_destroy_ops),
+                                                 num_repair=len(REPAIR_OPERATORS),
+                                                 learning_policy=chosen_lp,
+                                                 seed=chosen_seed),
+                            accept=acceptance_obj,
+                            stop=stop,
+                            n_mip_jobs=n_mip_jobs,
+                            mip_solver=mip_solver)
+
+            balans_list.append(balans)
+
+        return balans_list
+
+    # ----- Priority order for top_configs folders -----
+    _TOP_CONFIG_PRIORITY = ['miplibhard', 'distmiplib', 'ijcai25']
+
+    @staticmethod
+    def _generate_top_configs(n_jobs: int,
+                              mip_solver: str = Constants.default_solver,
+                              n_mip_jobs: int = Constants.default_n_mip_jobs) -> List[Balans]:
+        """Return a list of *n_jobs* Balans instances built from top config files.
+
+        Selection order
+        ---------------
+        1. Discover all sub-folders under ``top_configs/``.
+        2. Priority order among folders: miplibhard → distmiplib → ijcai25 →
+           remaining folders in alphabetical order.
+        3. **Round 1 (top 3):** From each folder (in priority order), take the
+           first 3 config files sorted alphabetically by filename.
+        4. **Round 2 (the rest):** From each folder (same order), take the
+           remaining files sorted alphabetically.
+        5. If *n_jobs* exceeds the total number of config files, cycle through
+           the ordered list again with a unique random seed for each extra job.
+
+        Parameters
+        ----------
+        n_jobs : int
+            Number of Balans instances to create.
+        mip_solver : str
+            MIP solver backend passed to every Balans instance.
+        n_mip_jobs : int
+            Number of parallel MIP threads passed to every Balans instance.
+
+        Returns
+        -------
+        list[Balans]
+            Exactly *n_jobs* Balans instances.
+        """
+        # --- Discover folders and sort by priority ---
+        all_folders = sorted(
+            [d for d in os.listdir(Constants.TOP_CONFIGS)
+             if os.path.isdir(os.path.join(Constants.TOP_CONFIGS, d))])
+
+        priority = ParBalans._TOP_CONFIG_PRIORITY
+        prioritised = [f for f in priority if f in all_folders]
+        remaining = [f for f in all_folders if f not in priority]
+        ordered_folders = prioritised + remaining
+
+        # --- Collect config paths per folder (sorted by filename) ---
+        folder_to_configs: Dict[str, List[str]] = {}
+        for folder in ordered_folders:
+            folder_path = os.path.join(Constants.TOP_CONFIGS, folder)
+            configs = sorted(glob.glob(os.path.join(folder_path, '*.json')))
+            if configs:
+                folder_to_configs[folder] = configs
+
+        # --- Build the priority-ordered flat list ---
+        # Round 1: top 3 from each folder
+        ordered_paths: List[str] = []
+        for folder in ordered_folders:
+            configs = folder_to_configs.get(folder, [])
+            ordered_paths.extend(configs[:3])
+
+        # Round 2: remaining files from each folder
+        for folder in ordered_folders:
+            configs = folder_to_configs.get(folder, [])
+            ordered_paths.extend(configs[3:])
+
+        # --- Create Balans instances ---
+        balans_list: List[Balans] = []
+        for i in range(n_jobs):
+            config_path = ordered_paths[i % len(ordered_paths)]
+            if i < len(ordered_paths):
+                # Unique config — use the seed from the config file
+                balans_list.append(Balans(config=config_path,
+                                          mip_solver=mip_solver,
+                                          n_mip_jobs=n_mip_jobs))
+            else:
+                # Wrapped around — reuse config with a unique random seed
+                balans_list.append(Balans(config=config_path,
+                                          seed=random.randint(1, 100000),
+                                          mip_solver=mip_solver,
+                                          n_mip_jobs=n_mip_jobs))
+
+        return balans_list
+

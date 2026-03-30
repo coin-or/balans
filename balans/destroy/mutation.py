@@ -10,7 +10,7 @@ def _mutation(current: _State, rnd_state, delta) -> _State:
     # Send the destroy set to base_instance.
 
     print(f"{timestamp()} *** Operator: MUTATION (delta={delta * 100:.0f}%)")
-    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

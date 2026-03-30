@@ -1,12 +1,12 @@
 {
   "seed": 9178,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_30",
     "Rins_30",
     "Proximity_015"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -22,7 +22,7 @@
       "tau": 2.648058
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "HillClimbing"
   }
 }

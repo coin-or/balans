@@ -1,6 +1,6 @@
 {
   "seed": 17380,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_30",
     "Rins_10",
@@ -15,7 +15,7 @@
     "Local_Branching_30",
     "Local_Branching_50"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -30,7 +30,7 @@
       "type": "ThompsonSampling"
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "SimulatedAnnealing",
     "step": 0.820306
   }

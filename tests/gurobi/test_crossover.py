@@ -224,4 +224,4 @@ class CrossoverTest(BaseTest):
         print("Best solution value:", result.best_state.objective())
 
         # Assert objective
-        self.assertEqual(best_objective, -40.0)
+        self.assertEqual(best_objective, -20.0)

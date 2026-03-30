@@ -1,13 +1,13 @@
 {
   "seed": 79402,
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_40",
     "Rins_10",
     "Rens_10",
     "Proximity_015"
   ],
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
   "selector": {
@@ -23,7 +23,7 @@
       "epsilon": 0.277576
     }
   },
-  "acceptance": {
+  "accept": {
     "type": "SimulatedAnnealing",
     "step": 0.904729
   }

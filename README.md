@@ -81,21 +81,23 @@ The runtime for each ALNS iteration is limited by `timelimit_alns_iteration` sec
 ```python
 # Parallel version of Balans, that runs several configurations parallely
 from balans.solver import ParBalans
-from alns.stop import MaxIterations
 
-# ParBalans to run different Balans configs in parallel and save results
-parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configurations
-                      n_mip_jobs=1,       # Inner-level: parallel BnB search. Only supported by Gurobi solver
-                      mip_solver="scip",
-                      output_dir="parbalans/")
+if __name__ == '__main__':
 
-# Run a mip instance to retrieve several results 
-instance_path = "mip_instance.mps"
-best_solution, best_objective = parbalans.run(instance_path)
+    # ParBalans to run different Balans configs in parallel and save results
+    parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configurations
+                          n_mip_jobs=1,       # Inner-level: parallel BnB search. Only supported by Gurobi solver
+                          mip_solver="scip",
+                          output_dir="parbalans_results/",
+                          balans_generator=ParBalans.TOP_CONFIGS)
 
-# Results of the best found solution and the objective
-print("Best solution:", best_solution)
-print("Best solution objective:", best_objective)
+    # Run a mip instance to retrieve several results 
+    instance_path = "mip_instance.mps"
+    best_solution, best_objective = parbalans.run(instance_path)
+
+    # Results of the best found solution and the objective
+    print("Best solution:", best_solution)
+    print("Best solution objective:", best_objective)
 ```
 
 ## Available Destroy Operators

@@ -16,7 +16,7 @@ def proximity(current: _State, rnd_state, delta) -> _State:
     # Note : the required objective operations for proximity search happens in base_instance file.
 
     print(f"{timestamp()} *** Operator: PROXIMITY SEARCH (delta={delta * 100:.0f}%)")
-    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

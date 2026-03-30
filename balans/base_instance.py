@@ -32,6 +32,16 @@ class _Instance:
         self.lp_obj_val = None
         self.lp_floating_discrete_indexes = None
 
+    def display_obj(self, obj_val: float) -> float:
+        """Convert a minimized-space objective to original space for user-facing output.
+
+        During ALNS, all objectives are in minimized space (negated for max problems).
+        This helper negates back for display so users see the natural value.
+        """
+        if self.mip.is_obj_sense_changed:
+            return -obj_val
+        return obj_val
+
     def initial_solve(self, index_to_val=None) -> Tuple[Dict[Any, float], float]:
 
         # Extracts static instance features (sense must be minimization now, after adjustment)
@@ -44,16 +54,17 @@ class _Instance:
         self.mip.fix_vars(index_to_val)
 
         # Solve with some time limit to get an initial solution
-        index_to_val, obj_val = self.mip.solve_and_undo(
-            time_limit_in_sc=cap_timelimit(self.timelimit_first_solution))
+        index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=cap_timelimit(self.timelimit_first_solution),
+                                                        is_feasibility_focus=True)
 
         # If no feasible initial solution found within time limit
         if len(index_to_val) == 0:
             # Solve for the first feasible solution within the remaining budget (solution_limit=1)
             remaining = remaining_time()
             if remaining > 0:
-                index_to_val, obj_val = self.mip.solve_and_undo(
-                    time_limit_in_sc=remaining, solution_limit=1)
+                index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=remaining,
+                                                                solution_limit=1,
+                                                                is_feasibility_focus=True)
 
         # Return solution
         return index_to_val, obj_val
@@ -117,7 +128,7 @@ class _Instance:
         # e.g. when destroy set is empty.
         if not has_destroy:
             print(f"{timestamp()} \t No destroy to apply, don't call optimize()")
-            print(f"{timestamp()} \t Current Obj: {starting_obj_val}")
+            print(f"{timestamp()} \t Current Obj: {self.display_obj(starting_obj_val)}")
             # print("\t starting_index_to_val: ", starting_index_to_val)
             return starting_index_to_val, starting_obj_val
 
@@ -126,12 +137,13 @@ class _Instance:
         if local_branching_size:
             time_limit = self.timelimit_local_branching_iteration
         time_limit = cap_timelimit(time_limit)
-        index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=time_limit)
+        index_to_val, obj_val = self.mip.solve_and_undo(time_limit_in_sc=time_limit,
+                                                        is_feasibility_focus=False)
 
         # If no solution found, go back
         if len(index_to_val) == 0:
             print(f"{timestamp()} \t No solution found, go back to previous state")
-            # print("\t Current Obj:", starting_obj_val)
+            # print("\t Current Obj:", self.display_obj(starting_obj_val))
             return starting_index_to_val, starting_obj_val
 
         # Solution found but for transformed objectives (random_obj and proximity), find the original obj value
@@ -140,5 +152,5 @@ class _Instance:
             print(f"{timestamp()} \t Transformed obj: {obj_val}")
             obj_val = self.mip.get_obj_value(index_to_val)
 
-        print(f"{timestamp()} \t Solve DONE! {obj_val}")
+        print(f"{timestamp()} \t Solve DONE! {self.display_obj(obj_val)}")
         return index_to_val, obj_val

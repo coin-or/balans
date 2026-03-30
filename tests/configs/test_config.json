@@ -3,13 +3,13 @@
   "seed": 42,
   "n_mip_jobs": 1,
 
-  "destroy_operators": [
+  "destroy_ops": [
     "Crossover",
     "Mutation_50",
     "Rins_25"
   ],
 
-  "repair_operators": [
+  "repair_ops": [
     "Repair"
   ],
 
@@ -22,7 +22,7 @@
     }
   },
 
-  "acceptance": {
+  "accept": {
     "type": "HillClimbing"
   },
 
@@ -34,4 +34,3 @@
   "timelimit_first_solution": 10,
   "timelimit_alns_iteration": 30
 }
-

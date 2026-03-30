@@ -11,7 +11,7 @@ def crossover(current: _State, rnd_state) -> _State:
     #  Otherwise, put it to the destroy set.
     #  Send the destroy set to base_instance.
     print(f"{timestamp()} *** Operator: CROSSOVER")
-    print(f"{timestamp()} \t Destroy current objective: {current.obj_val}")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 
@@ -19,7 +19,9 @@ def crossover(current: _State, rnd_state) -> _State:
     discrete_indexes = current.instance.discrete_indexes
 
     r1_index_to_val, _ = current.instance.mip.solve_random_and_undo(
-        cap_timelimit(current.instance.timelimit_crossover_random_feasible))
+        time_limit_in_sc=cap_timelimit(current.instance.timelimit_crossover_random_feasible),
+        solution_limit=1,
+        is_feasibility_focus=True)
 
     # If we don't find a random feasible solution
     if len(r1_index_to_val) == 0:

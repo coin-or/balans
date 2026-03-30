@@ -16,7 +16,7 @@ class _BaseMIP(metaclass=abc.ABCMeta):
         self.variables = None
         self.org_objective_fn = None
         self.org_objective_sense = None
-        self.is_obj_sense_changed = False       # we always minimize
+        self.is_obj_sense_changed = False       # we always minimize in Balans (because ALNS minimizes)
 
         # These are used for incremental solving
         self.constraints = []
@@ -64,7 +64,8 @@ class _BaseMIP(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None) -> Tuple[Dict[Any, float], float]:
+    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None,
+                       is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         """
         Solve with the given time and solution limit, return the solution index_to_val and obj value
         Make sure to undo the solve and clear the constraints, promixity z, and reset objective.
@@ -72,7 +73,7 @@ class _BaseMIP(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def solve_random_and_undo(self, time_limit_in_sc=None) -> Tuple[Dict[Any, float], float]:
+    def solve_random_and_undo(self, time_limit_in_sc=None, solution_limit=None, is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         """
         Solve with the given time limit and return a random solution index_to_val and obj value
         Make sure to undo the solve operation.

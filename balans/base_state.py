@@ -51,7 +51,7 @@ class _State:
         self.rens_float_set = None
         self.has_random_obj = False
         self.local_branching_size = 0
-        self.proximity_delta = False
+        self.proximity_delta = 0
 
     def solve_and_update(self):
         # Solve the current state with the destroyed variables and update solution and objective

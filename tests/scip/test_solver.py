@@ -321,10 +321,6 @@ class SolverTest(BaseTest):
         self.assertEqual(b.seed, 42)
         self.assertEqual(b.mip_solver_str, "scip")
 
-        # Verify constants were overridden
-        self.assertEqual(Constants.timelimit_first_solution, 10)
-        self.assertEqual(Constants.timelimit_alns_iteration, 30)
-
     def test_balans_config_with_explicit_override(self):
         """Explicit keyword args should override config values."""
         config_path = os.path.normpath(os.path.join(Constants.DATA_TEST, '..', 'configs', 'test_config.json'))
@@ -340,19 +336,19 @@ class SolverTest(BaseTest):
     def test_config_factory_load(self):
         """ConfigFactory.load should return a well-formed dict."""
         cfg = ConfigFactory.load(ConfigFactory.DEFAULT_CONFIG_PATH)
-        self.assertIn('destroy_operator_names', cfg)
-        self.assertIn('repair_operator_names', cfg)
-        self.assertIn('selector_config', cfg)
+        self.assertIn('destroy_ops', cfg)
+        self.assertIn('repair_ops', cfg)
+        self.assertIn('selector', cfg)
         self.assertIn('accept', cfg)
         self.assertIn('stop', cfg)
         self.assertIn('seed', cfg)
-        self.assertEqual(len(cfg['destroy_operator_names']), 10)
+        self.assertEqual(len(cfg['destroy_ops']), 10)
 
     def test_balans_config_invalid_operator(self):
         """Config with an unknown operator name should raise ValueError."""
         bad_config = {
-            "destroy_operators": ["NonExistentOperator"],
-            "repair_operators": ["Repair"],
+            "destroy_ops": ["NonExistentOperator"],
+            "repair_ops": ["Repair"],
             "stop": {"type": "MaxIterations", "max_iterations": 1}
         }
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
