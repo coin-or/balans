@@ -30,7 +30,7 @@ print("Best solution:", result.best_state.solution())
 print("Best solution objective:", result.best_state.objective())
 ```
 
-To supply a custom JSON configuration file, e.g., [`default.json`](https://github.com/coin-or/balans/blob/main/balans/configs/default.json)
+To supply a custom JSON configuration file, e.g., [`default.json`](https://github.com/coin-or/balans/blob/main/balans/configs/default.json):
 ```python
 from balans.solver import Balans
 balans = Balans(config="/path/to/config.json")
@@ -79,9 +79,7 @@ The runtime for each ALNS iteration is limited by `timelimit_alns_iteration` sec
 
 ## Quick Start - ParBalans
 
-**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level, `n_jobs`, and the inner branch-and-bound level, `n_mip_jobs` to exploit modern multicore architectures. 
-
-The `balans_generator` function decides which configuration to run for each parallel process. By default, `ParBalans.TOP_CONFIGS` is used, which generates several configurations listed under `/balans/configs/top_configs/*.json`. These were selected based on their performance across a wide range of MIP instances. Alternatively, `ParBalans.RANDOM_CONFIGS` runs random configurations by sampling from a configuration space. You can provide your own generator function that runs a list of Balans configurations of size `n_jobs` to specify the configurations to run in parallel.
+**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level, `n_jobs`, and the inner branch-and-bound level, `n_mip_jobs` to exploit modern multicore architectures.
 
 ```python
 # Parallel version of Balans, that runs several configurations parallely
@@ -104,6 +102,8 @@ if __name__ == '__main__':
     print("Best solution:", best_solution)
     print("Best solution objective:", best_objective)
 ```
+
+The `balans_generator` function decides which configuration to run for each parallel process. By default, `ParBalans.TOP_CONFIGS` is used, which generates several configurations listed under `/balans/configs/top_configs/*.json`. These were selected based on their performance across a wide range of MIP instances. Alternatively, `ParBalans.RANDOM_CONFIGS` runs random configurations by sampling from a configuration space. You can provide your own generator function that runs a list of Balans configurations of size `n_jobs` to specify the configurations to run in parallel.
 
 ## Available Destroy Operators
 * Dins[^1] 
