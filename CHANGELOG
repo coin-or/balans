@@ -9,6 +9,8 @@ Feb 15, 2025 2.2.0
 - Major: Add printouts for starting Balans configuration and timestamps at each step
 - Major: Add is_feasibility_focus param to solve_undo and solve_random_undo so SCIP/Gurobi can focus on feasibility for initial solution.
 - Major: When obj sense changed, calculations and printouts for maximization vs. minimization are now correct.
+- Major: The results object of Balans converts objective values to the correct sign (positive for maximization, negative for minimization) so that the results are consistent regardless of the objective sense during solving.
+- Major: ParBalans with TOP_CONFIGS, which becomes the default.
 - Minor: Separate main_balans.py main_scip.py main_gurobi.py
 - Minor: Bug when calling Balans() lead to an error because of "accept" name clash in reward accept vs. accept criterion. Fixed now.
 - Minor: Bug fix in BaseTest to remove mip_solver. This causes an error when running the whole "test suite" because scip tests sets the BaseTest.mip_solver to "scip". Then, when running gurobi tests, it tries to use "scip" as the solver which causes an error. Now, each test class sets its own mip_solver and there is no more "global" BaseTest.mip_solver variable.
