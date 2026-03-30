@@ -492,6 +492,9 @@ class Balans:
         mip = create_mip_solver(instance_path, self.seed, self.n_mip_jobs, self.mip_solver_str,
                                 big_m=self.big_m)
 
+        sense = "maximize (converted to minimize)" if mip.is_obj_sense_changed else "minimize"
+        print(f"{timestamp()} Objective sense: {sense}")
+
         # Create instance with timelimits set from this Balans configuration.
         self._instance = _Instance(mip, self.seed,
                                    timelimit_first_solution=self.timelimit_first_solution,
