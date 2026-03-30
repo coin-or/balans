@@ -85,10 +85,10 @@ class InvalidTest(BaseTest):
     def test_invalid_selector(self):
         with self.assertRaises(TypeError):
             # Parameters
-            seed = -1
+            seed = 1283
             destroy_ops = [DestroyOperators.Mutation_25]
             repair_ops = [RepairOperators.Repair]
-            selector = None
+            selector = "NOT VALID" # None is OK we default to sth
             accept = HillClimbing()
             stop = MaxIterations(5)
 
@@ -98,7 +98,7 @@ class InvalidTest(BaseTest):
     def test_invalid_accept(self):
         with self.assertRaises(TypeError):
             # Parameters
-            seed = -1
+            seed = 1283
             destroy_ops = [DestroyOperators.Mutation_25]
             repair_ops = [RepairOperators.Repair]
             selector = MABSelector(scores=[5, 2, 1, 0.5], num_destroy=5, num_repair=1,
@@ -112,12 +112,12 @@ class InvalidTest(BaseTest):
     def test_invalid_stop(self):
         with self.assertRaises(TypeError):
             # Parameters
-            seed = -1
+            seed = 1283
             destroy_ops = [DestroyOperators.Mutation_25]
             repair_ops = [RepairOperators.Repair]
             selector = None
             accept = HillClimbing()
-            stop = None
+            stop = "NOT VALID" # None is OK we default to sth
 
             # Solver
             balans = Balans(destroy_ops, repair_ops, selector, accept, stop, seed, mip_solver=BaseTest.mip_solver)

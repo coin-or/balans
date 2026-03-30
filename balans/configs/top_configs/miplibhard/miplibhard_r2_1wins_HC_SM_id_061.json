@@ -1,0 +1,35 @@
+{
+  "seed": 57506,
+  "destroy_ops": [
+    "Crossover",
+    "Mutation_40",
+    "Mutation_50",
+    "Rins_10",
+    "Rens_10",
+    "Rens_20",
+    "Proximity_010",
+    "Proximity_015",
+    "Proximity_020",
+    "Local_Branching_40",
+    "Local_Branching_50"
+  ],
+  "repair_ops": [
+    "Repair"
+  ],
+  "selector": {
+    "type": "MABSelector",
+    "scores": [
+      5,
+      4,
+      2,
+      0
+    ],
+    "learning_policy": {
+      "type": "Softmax",
+      "tau": 1.800747
+    }
+  },
+  "accept": {
+    "type": "HillClimbing"
+  }
+}

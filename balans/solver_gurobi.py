@@ -11,15 +11,15 @@ from balans.utils import Constants
 
 class _Gurobi(_BaseMIP):
 
-    def __init__(self, instance_path: str, n_mip_jobs: int, seed: int):
-        super().__init__(seed)
+    def __init__(self, instance_path: str, n_mip_jobs: int, seed: int, big_m: float = Constants.M):
+        super().__init__(seed, big_m)
 
         # Create Gurobi model
         self.model = gp.read(instance_path)
         self.model.Params.OutputFlag = 0
         self.model.Params.Seed = self.seed
         self.model.Params.Threads = n_mip_jobs
-        # self.model.Params.Presolve = 0
+        # self.model.Params.Presolve = 0 # turns of presolve
 
         # Set variables
         self.variables = self.model.getVars()
@@ -49,6 +49,9 @@ class _Gurobi(_BaseMIP):
             var = expr.getVar(i)
             coeff = expr.getCoeff(i)
             obj_val += coeff * index_to_val[var.index]
+
+        if self.is_obj_sense_changed:
+            obj_val = -obj_val
 
         return obj_val
 
@@ -137,11 +140,14 @@ class _Gurobi(_BaseMIP):
         # a slack variable z to prevent infeasible solution, \theta = 1
         self.proximity_z = self.model.addVar(vtype=GRB.CONTINUOUS, lb=0, name='proximity_z')
         self.model.update()  # Update model to include new variable
+        # Use obj_val - delta * |obj_val| so the cutoff always tightens
+        # (moves in the improvement direction), even when obj_val < 0.
+        cutoff = obj_val - proximity_delta * abs(obj_val)
         self.constraints.append(self.model.addConstr(self.model.getObjective() <=
-                                                     obj_val * (1 - proximity_delta) + self.proximity_z))
+                                                     cutoff + self.proximity_z))
 
         # M * z is to make sure model does not use z, unless needed to avoid infeasibility
-        self.model.setObjective(zero_expr + one_expr + Constants.M * self.proximity_z, GRB.MINIMIZE)
+        self.model.setObjective(zero_expr + one_expr + self.big_m * self.proximity_z, GRB.MINIMIZE)
 
     def rens(self, index_to_val, rens_float_set, lp_index_to_val) -> None:
         for var in self.variables:
@@ -192,16 +198,18 @@ class _Gurobi(_BaseMIP):
         # Set the new objective function
         self.model.setObjective(new_obj, GRB.MINIMIZE)
 
-        # Set limits
-        self.model.Params.SolutionLimit = 1
-        self.model.Params.Heuristics = 0
-
-    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None) -> Tuple[Dict[Any, float], float]:
+    def solve_and_undo(self,
+                       time_limit_in_sc=None,
+                       solution_limit=None,
+                       is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         # Set limits
         if time_limit_in_sc is not None:
             self.model.Params.TimeLimit = time_limit_in_sc
         if solution_limit is not None:
             self.model.Params.SolutionLimit = solution_limit
+        if is_feasibility_focus:
+            self.model.Params.MIPFocus = 1 # prioritize feasibility
+            self.model.Params.Heuristics = 0.5  # spend 50% of node time on heuristics (default is 0.05)
 
         # Gurobi specific: Update model after adding constraints and variables
         self.model.update()
@@ -219,7 +227,10 @@ class _Gurobi(_BaseMIP):
         if time_limit_in_sc is not None:
             self.model.Params.TimeLimit = GRB.INFINITY
         if solution_limit is not None:
-            self.model.Params.SolutionLimit = 2000000000
+            self.model.Params.SolutionLimit = GRB.MAXINT
+        if is_feasibility_focus:
+            self.model.Params.MIPFocus = 0
+            self.model.Params.Heuristics = 0.05
 
         # Remove constraints, and reset
         for ct in self.constraints:
@@ -254,10 +265,18 @@ class _Gurobi(_BaseMIP):
         # Return solution
         return index_to_val, obj_val
 
-    def solve_random_and_undo(self, time_limit_in_sc=None) -> Tuple[Dict[Any, float], float]:
+    def solve_random_and_undo(self,
+                              time_limit_in_sc=None,
+                              solution_limit=None,
+                              is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         # Set limits
         if time_limit_in_sc is not None:
             self.model.Params.TimeLimit = time_limit_in_sc
+        if solution_limit is not None:
+            self.model.Params.SolutionLimit = solution_limit
+        if is_feasibility_focus:
+            self.model.Params.MIPFocus = 1 # prioritize feasibility
+            self.model.Params.Heuristics = 0.5  # spend 50% of node time on heuristics (default is 0.05)
 
         # Set random objective
         self.random_objective()
@@ -282,10 +301,14 @@ class _Gurobi(_BaseMIP):
         else:
             self.model.setObjective(self.org_objective_fn, GRB.MINIMIZE)
 
-        self.model.Params.SolutionLimit = 2000000000
-        self.model.Params.Heuristics = 0.05  # Reset to default
+        # Undo limits
         if time_limit_in_sc is not None:
             self.model.Params.TimeLimit = GRB.INFINITY
+        if solution_limit is not None:
+            self.model.Params.SolutionLimit = GRB.MAXINT
+        if is_feasibility_focus:
+            self.model.Params.MIPFocus = 0
+            self.model.Params.Heuristics = 0.05
 
         return index_to_val, obj_val
 

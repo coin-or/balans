@@ -1,0 +1,33 @@
+{
+  "seed": 41124,
+  "destroy_ops": [
+    "Crossover",
+    "Mutation_20",
+    "Mutation_40",
+    "Rins_30",
+    "Rens_20",
+    "Rens_50",
+    "Proximity_020",
+    "Local_Branching_10",
+    "Local_Branching_50"
+  ],
+  "repair_ops": [
+    "Repair"
+  ],
+  "selector": {
+    "type": "MABSelector",
+    "scores": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "learning_policy": {
+      "type": "ThompsonSampling"
+    }
+  },
+  "accept": {
+    "type": "SimulatedAnnealing",
+    "step": 0.054815
+  }
+}

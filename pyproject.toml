@@ -26,6 +26,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.scripts]
+balans = "balans.main:main"
+
 [project.urls]
 Documentation = "https://github.com/coin-or/balans"
 Source = "https://github.com/coin-or/balans"
@@ -35,3 +38,7 @@ version = {attr = "balans._version.__version__"}
 
 [tool.setuptools.packages.find]
 exclude = ["*.tests", "*.tests.*", "tests.*", "tests", "notebooks"]
+
+[tool.setuptools.package-data]
+balans = ["configs/*.json"]
+

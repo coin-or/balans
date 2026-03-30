@@ -1,6 +1,7 @@
 import copy
 
 from balans.base_state import _State
+from balans.utils import timestamp
 
 
 def _mutation(current: _State, rnd_state, delta) -> _State:
@@ -8,8 +9,8 @@ def _mutation(current: _State, rnd_state, delta) -> _State:
     # Then, depending on delta parameter, choose a random subset of discrete variables to destroy.
     # Send the destroy set to base_instance.
 
-    print("*** Operator: ", "MUTATION")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: MUTATION (delta={delta * 100:.0f}%)")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

@@ -4,6 +4,7 @@
 .pytest_cache/*
 tests/__pycache__/*
 tests/results/*
+parbalans_results/*
 
 # Environments
 .env

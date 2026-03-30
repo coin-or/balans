@@ -1,0 +1,40 @@
+{
+  "seed": 44808,
+  "destroy_ops": [
+    "Crossover",
+    "Mutation_30",
+    "Mutation_50",
+    "Rins_20",
+    "Rins_40",
+    "Rens_20",
+    "Rens_30",
+    "Rens_40",
+    "Rens_50",
+    "Proximity_005",
+    "Proximity_010",
+    "Proximity_015",
+    "Proximity_030",
+    "Local_Branching_10",
+    "Local_Branching_20"
+  ],
+  "repair_ops": [
+    "Repair"
+  ],
+  "selector": {
+    "type": "MABSelector",
+    "scores": [
+      5,
+      4,
+      2,
+      0
+    ],
+    "learning_policy": {
+      "type": "EpsilonGreedy",
+      "epsilon": 0.431254
+    }
+  },
+  "accept": {
+    "type": "SimulatedAnnealing",
+    "step": 0.239963
+  }
+}

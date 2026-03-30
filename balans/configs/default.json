@@ -1,0 +1,46 @@
+{
+  "mip_solver": "scip",
+  "n_mip_jobs": 1,
+  "seed": 1283,
+
+  "destroy_ops": [
+    "Crossover",
+    "Mutation_50",
+    "Rins_40",
+    "Rens_40",
+    "Rens_50",
+    "Proximity_005",
+    "Local_Branching_10",
+    "Local_Branching_20",
+    "Local_Branching_30",
+    "Local_Branching_50"
+  ],
+
+  "repair_ops": [
+    "Repair"
+  ],
+
+  "selector": {
+    "type": "MABSelector",
+    "scores": [8, 4, 2, 1],
+    "learning_policy": {
+      "type": "Softmax",
+      "tau": 1.359686
+    }
+  },
+
+  "accept": {
+    "type": "HillClimbing"
+  },
+
+  "stop": {
+    "type": "MaxRuntime",
+    "max_runtime": 60
+  },
+
+  "timelimit_first_solution": 10,
+  "timelimit_crossover_random_feasible": 6,
+  "timelimit_alns_iteration": 12,
+  "timelimit_local_branching_iteration": 15,
+  "big_m": 1000
+}

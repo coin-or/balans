@@ -7,15 +7,16 @@ from balans.utils import Constants
 class _BaseMIP(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def __init__(self, seed: int):
+    def __init__(self, seed: int, big_m: float = Constants.M):
         self.seed = seed
+        self.big_m = big_m
 
         # Model, variables, objective
         self.model = None
         self.variables = None
         self.org_objective_fn = None
         self.org_objective_sense = None
-        self.is_obj_sense_changed = False       # we always minimize
+        self.is_obj_sense_changed = False       # we always minimize in Balans (because ALNS minimizes)
 
         # These are used for incremental solving
         self.constraints = []
@@ -63,7 +64,8 @@ class _BaseMIP(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None) -> Tuple[Dict[Any, float], float]:
+    def solve_and_undo(self, time_limit_in_sc=None, solution_limit=None,
+                       is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         """
         Solve with the given time and solution limit, return the solution index_to_val and obj value
         Make sure to undo the solve and clear the constraints, promixity z, and reset objective.
@@ -71,7 +73,7 @@ class _BaseMIP(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def solve_random_and_undo(self, time_limit_in_sc=None) -> Tuple[Dict[Any, float], float]:
+    def solve_random_and_undo(self, time_limit_in_sc=None, solution_limit=None, is_feasibility_focus=False) -> Tuple[Dict[Any, float], float]:
         """
         Solve with the given time limit and return a random solution index_to_val and obj value
         Make sure to undo the solve operation.
@@ -89,7 +91,8 @@ class _BaseMIP(metaclass=abc.ABCMeta):
 def create_mip_solver(instance_path: str,
                       seed: int = Constants.default_seed,
                       n_mip_jobs: int = 1,
-                      mip_solver: str = Constants.default_solver) -> _BaseMIP:
+                      mip_solver: str = Constants.default_solver,
+                      big_m: float = Constants.M) -> _BaseMIP:
     """ Returns a mip model of the given solver type for the given instance
 
         Parameters
@@ -100,6 +103,8 @@ def create_mip_solver(instance_path: str,
             the seed to pass to mip model
         mip_solver : string
             the type of the mip model, scip or gurobi
+        big_m : float
+            the Big-M coefficient used in the Proximity operator
 
         Returns
         -------
@@ -112,4 +117,4 @@ def create_mip_solver(instance_path: str,
     mip_factory = {Constants.gurobi_solver: _Gurobi,
                    Constants.scip_solver: _SCIP,}
 
-    return mip_factory.get(mip_solver)(instance_path, n_mip_jobs, seed)
+    return mip_factory.get(mip_solver)(instance_path, n_mip_jobs, seed, big_m)

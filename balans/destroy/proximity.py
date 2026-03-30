@@ -1,9 +1,10 @@
 import copy
 
 from balans.base_state import _State
+from balans.utils import timestamp
 
 
-def proximity(current: _State, rnd_state, delta=0.005) -> _State:
+def proximity(current: _State, rnd_state, delta) -> _State:
     # Objective function modification
     # Change the objective coefficients of the original
     # problem based on the current solution value.
@@ -14,8 +15,8 @@ def proximity(current: _State, rnd_state, delta=0.005) -> _State:
     # Send the destroy set to base_instance.
     # Note : the required objective operations for proximity search happens in base_instance file.
 
-    print("*** Operator: ", "PROXIMITY SEARCH")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: PROXIMITY SEARCH (delta={delta * 100:.0f}%)")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 

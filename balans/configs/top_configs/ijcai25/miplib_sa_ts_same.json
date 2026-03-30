@@ -1,0 +1,54 @@
+{
+  "seed": 1283,
+  "n_mip_jobs": 1,
+
+  "destroy_ops": [
+    "Crossover",
+    "Mutation_25",
+    "Mutation_50",
+    "Mutation_75",
+    "Local_Branching_10",
+    "Local_Branching_25",
+    "Local_Branching_50",
+    "Proximity_005",
+    "Proximity_015",
+    "Proximity_030",
+    "Rens_25",
+    "Rens_50",
+    "Rens_75",
+    "Rins_25",
+    "Rins_50",
+    "Rins_75"
+  ],
+
+  "repair_ops": [
+    "Repair"
+  ],
+
+  "selector": {
+    "type": "MABSelector",
+    "scores": [1, 1, 0, 0],
+    "learning_policy": {
+      "type": "ThompsonSampling"
+    }
+  },
+
+  "accept": {
+    "type": "SimulatedAnnealing",
+    "start_temperature": 20,
+    "end_temperature": 1,
+    "step": 0.1,
+    "method": "linear"
+  },
+
+  "stop": {
+    "type": "MaxRuntime",
+    "max_runtime": 3600
+  },
+
+  "timelimit_first_solution": 20,
+  "timelimit_crossover_random_feasible": 20,
+  "timelimit_alns_iteration": 60,
+  "timelimit_local_branching_iteration": 150,
+  "big_m": 1000
+}

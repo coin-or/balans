@@ -14,86 +14,96 @@ More broadly, Balans is an integration technology at the intersection of adaptiv
 
 Balans is a collaborative effort between academia and industry, developed by Brown University, the University of Southern California, and the AI Center of Excellence at Fidelity Investments. The project is contributed to the [COIN-OR Foundation](https://www.coin-or.org/).
 
-## Quick Start
+## Quick Start - Balans
 ```python
-# ALNS for adaptive large neigborhood search
-from alns.select import MABSelector
-from alns.accept import HillClimbing, SimulatedAnnealing
-from alns.stop import MaxIterations, MaxRuntime
+# Balans meta-solver for solving mixed-integer programming problems
+from balans.solver import Balans
 
-# MABWiser for contextual multi-armed bandits
-from mabwiser.mab import LearningPolicy
+# Balans with default configuration
+balans = Balans()
 
-# Balans meta-solver for solving mixed integer programming problems
-from balans.solver import Balans, DestroyOperators, RepairOperators
+# Solve
+result = balans.solve("mip_instance.mps")
 
-# Destroy operators
-destroy_ops = [DestroyOperators.Crossover,
-               DestroyOperators.Dins,
-               DestroyOperators.Mutation_25,
-               DestroyOperators.Local_Branching_10,
-               DestroyOperators.Rins_25,
-               DestroyOperators.Proximity_05,
-               DestroyOperators.Rens_25,
-               DestroyOperators.Random_Objective]
-
-# Repair operators
-repair_ops = [RepairOperators.Repair]
-
-# Rewards for online learning feedback loop
-best, better, accept, reject = 4, 3, 2, 1
-
-# Bandit selector
-selector = MABSelector(scores=[best, better, accept, reject],
-                       num_destroy=len(destroy_ops),
-                       num_repair=len(repair_ops),
-                       learning_policy=LearningPolicy.EpsilonGreedy(epsilon=0.50))
-
-# Acceptance criterion
-# accept = HillClimbing() # for pure exploitation 
-accept = SimulatedAnnealing(start_temperature=20, end_temperature=1, step=0.1)
-
-# Stopping condition
-# stop = MaxRuntime(100)
-stop = MaxIterations(10)
-
-# Balans
-balans = Balans(destroy_ops=destroy_ops,
-                repair_ops=repair_ops,
-                selector=selector,
-                accept=accept,
-                stop=stop,
-                mip_solver="scip") # "gurobi"
-
-# Run a mip instance to retrieve results 
-instance_path = "data/miplib/noswot.mps"
-result = balans.solve(instance_path)
-
-# Results of the best found solution and the objective
+# Results
 print("Best solution:", result.best_state.solution())
 print("Best solution objective:", result.best_state.objective())
 ```
 
+To supply a custom JSON configuration file, e.g., [`default.json`](https://github.com/coin-or/balans/blob/main/balans/configs/default.json):
+```python
+from balans.solver import Balans
+balans = Balans(config="/path/to/config.json")
+```
+
+To run directly from the command line after `pip install balans`:
+```bash
+> balans mip_instance.mps
+> balans mip_instance.mps config.json
+```
+
+To run programmatically with a custom configuration, see [`main_balans.py`](https://github.com/coin-or/balans/blob/main/main_balans.py).
+
+## How does Balans work?
+Balans is a meta-solver that sits on top of a MIP solver (e.g., SCIP, Gurobi) and iteratively improves the solution to a MIP instance by applying a sequence of destroy and repair operators. The selection of these operators is guided by a multi-armed bandit algorithm that learns which operators are most effective at improving the solution over time.
+
+### Intended Use Case
+Balans, as a meta-heuristic solver, cannot provide optimality guarantees. Instead, it is intended for finding good solutions to **extremely challenging instances** that cannot be solved with MIP solvers to find optimality or cannot be solved with primal heuristics to find good solutions quickly. 
+
+If you have a challenging MIP instance that _cannot be solved to optimality with a MIP solver_, or _does not admit good-quality heuristic solutions in short amount of time_, then Balans is your friend! 🤗 
+
+### Create a Balans solver
+You can create a Balans solver using 
+1. Default configuration as `balans = Balans()`.
+1. JSON configuration file as `balans = Balans(config="/path/to/config.json")`.
+2. Constructor settings as `balans = Balans(destroy_ops, repair_ops, accept, stop, ...)`). 
+ 
+The parameters specify the destroy and repair operators to consider, the rewards and the learning policy for the multi-armed bandit algorithm, the acceptance criteria for neighborhood exploration, the stopping condition, and other settings such as time limits and the MIP solver to use.
+
+### Run the Balans solver
+When you run Balans solver on a given instance, `balans.solve("mip_instance.mps")`, Balans first reads the MIP instance from the specified path using the built-in reader of the underlying MIP solver. Then, it attempts to (1) find an initial solution, and (2), improve it until stopping condition is met.
+
+#### 1) Finding an initial solution 
+First, Balans tries to find an initial solution running the mip solver with `timelimit_first_solution` seconds. Notice that this might find more than one solution until hitting the time limit and the best found solution becomes the initial solution. 
+
+You can skip this step by providing an initial solution dictionary to Balans via `balans.solve("mip_instance.mps", index_to_val)`. This sets variable values according to `index_to_val` dictionary before starting the search. This can even be partial to guide the MIP solver in its search for the initial solution. 
+
+In case finding an initial solution fails, Balans will restart the MIP solver to find a _single feasible solution_ within the remaining the time limit. If this also fails within the timelimit, Balans will terminate without any solution. 😢
+
+#### 2) Improving the solution
+After obtaining an initial solution, Balans will enter the main ALNS search loop and iteratively apply destroy and repair operators to improve the solution. The multi-armed bandit algorithm will update its beliefs about which operators are most effective based on the observed improvements in the solution. The reward mechanism can be configured via `scores=[best, better, accept, rejet]` parameter of the `selector` object which specifies the reward for finding a new best solution (best), improving the current solution (better), accepting the solution (accept), or rejecting the solution (reject).
+
+This loop runs until the specified stop condition is met, e.g., maximum number of iterations, time limit, or no improvement.  
+
+The runtime for each ALNS iteration is limited by `timelimit_alns_iteration` seconds, except for local branching operator, which is a costlier operator and is limited by `timelimit_local_branching_iteration` seconds. The crossover operator requires finding a random solution to crossover with the current solution. This is limited by `timelimit_crossover_random_feasible` seconds. The proximity operator, which alters the original objective function, uses `big_m` to avoid infeasibility. 
+
 ## Quick Start - ParBalans
+
+**ParBalans** ([Arxiv'25](https://arxiv.org/abs/2508.06736)) extends this framework with parallelization strategies at both the outer configuration level, `n_jobs`, and the inner branch-and-bound level, `n_mip_jobs` to exploit modern multicore architectures.
+
 ```python
 # Parallel version of Balans, that runs several configurations parallely
 from balans.solver import ParBalans
-from alns.stop import MaxIterations
 
-# ParBalans to run different Balans configs in parallel and save results
-parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configurations
-                      n_mip_jobs=1,       # Inner-level: parallel BnB search. Only supported by Gurobi solver
-                      mip_solver="scip",
-                      output_dir="results/")
+if __name__ == '__main__':
 
-# Run a mip instance to retrieve several results 
-instance_path = "data/miplib/noswot.mps"
-best_solution, best_objective = parbalans.run(instance_path)
+    # ParBalans to run different Balans configs in parallel and save results
+    parbalans = ParBalans(n_jobs=2,           # Outer-level: parallel Balans configurations
+                          n_mip_jobs=1,       # Inner-level: parallel BnB search. Only supported by Gurobi solver
+                          mip_solver="scip",
+                          output_dir="parbalans_results/",
+                          balans_generator=ParBalans.TOP_CONFIGS)
 
-# Results of the best found solution and the objective
-print("Best solution:", best_solution)
-print("Best solution objective:", best_objective)
+    # Run a mip instance to retrieve several results 
+    instance_path = "mip_instance.mps"
+    best_solution, best_objective = parbalans.run(instance_path)
+
+    # Results of the best found solution and the objective
+    print("Best solution:", best_solution)
+    print("Best solution objective:", best_objective)
 ```
+
+The `balans_generator` function decides which configuration to run for each parallel process. By default, `ParBalans.TOP_CONFIGS` is used, which generates several configurations listed under `/balans/configs/top_configs/*.json`. These were selected based on their performance across a wide range of MIP instances. Alternatively, `ParBalans.RANDOM_CONFIGS` runs random configurations by sampling from a configuration space. You can provide your own generator function that returns a list of Balans configurations of size `n_jobs` to specify the configurations to run in parallel.
 
 ## Available Destroy Operators
 * Dins[^1] 
@@ -117,7 +127,9 @@ print("Best solution objective:", best_objective)
 * Repair MIP
 
 ## Installation
-Balans requires Python 3.10+ can be installed from PyPI via `pip install balans`. More details in [INSTALL](INSTALL). 
+**Balans** requires Python 3.10+ can be installed from PyPI via `pip install balans`.
+once installed, it can be used from the command line via `balans /path/to/problem.mps`
+More details in [INSTALL](INSTALL). 
 
 ## Citation
 If you use Balans in a publication, please cite it as:

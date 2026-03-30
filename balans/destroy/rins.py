@@ -2,6 +2,7 @@ import copy
 import math
 
 from balans.base_state import _State
+from balans.utils import timestamp
 
 
 def _rins(current: _State, rnd_state, delta) -> _State:
@@ -10,8 +11,8 @@ def _rins(current: _State, rnd_state, delta) -> _State:
     #  Otherwise, put it to the destroy set.
     #  Send the destroy set to base_instance.
 
-    print("*** Operator: ", "RINS")
-    print("\t Destroy current objective:", current.obj_val)
+    print(f"{timestamp()} *** Operator: RINS (delta={delta * 100:.0f}%)")
+    print(f"{timestamp()} \t Destroy current objective: {current.instance.display_obj(current.obj_val)}")
     next_state = copy.deepcopy(current)
     next_state.reset_solve_settings()
 
