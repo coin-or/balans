@@ -103,7 +103,7 @@ if __name__ == '__main__':
     print("Best solution objective:", best_objective)
 ```
 
-The `balans_generator` function decides which configuration to run for each parallel process. By default, `ParBalans.TOP_CONFIGS` is used, which generates several configurations listed under `/balans/configs/top_configs/*.json`. These were selected based on their performance across a wide range of MIP instances. Alternatively, `ParBalans.RANDOM_CONFIGS` runs random configurations by sampling from a configuration space. You can provide your own generator function that runs a list of Balans configurations of size `n_jobs` to specify the configurations to run in parallel.
+The `balans_generator` function decides which configuration to run for each parallel process. By default, `ParBalans.TOP_CONFIGS` is used, which generates several configurations listed under `/balans/configs/top_configs/*.json`. These were selected based on their performance across a wide range of MIP instances. Alternatively, `ParBalans.RANDOM_CONFIGS` runs random configurations by sampling from a configuration space. You can provide your own generator function that returns a list of Balans configurations of size `n_jobs` to specify the configurations to run in parallel.
 
 ## Available Destroy Operators
 * Dins[^1] 
